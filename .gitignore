@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # folders not to upload
-core/deprecated
-core/make_graphs
+core/deprecated/
+core/make_graphs/
