@@ -127,7 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
+# ------------------------------------------------
 # folders not to upload
 core/deprecated/
 core/make_graphs/
+experiments/
+
+# saved files
+*.pdf
+*.png
+*.txt
+*.zip
