@@ -1,5 +1,5 @@
-import core.construct_model
-import core.create_parameters
+# import core.construct_model
+from core import construct_model as cm
 from core import create_parameters as cp
 from core.deprecated import pre_made_inputs as pmi
 from core import extract_info as ext
@@ -277,9 +277,7 @@ def test_check_false_negative():
 
     s_info = output_inputs()[-1]
 
-    false_neg = core.construct_model.check_false_negatives(s_info)[0]
-
-
+    false_neg = cm.check_false_negatives(s_info)[0]
 
     deadline = parameters_sim()[1]
     horizon, g = parameters_sim()[3:5]
@@ -294,7 +292,7 @@ def test_check_false_negative():
     b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution,
                                                 capture_range, zeta)
 
-    false_neg_2, zeta2 = core.construct_model.check_false_negatives(searchers_info)
+    false_neg_2, zeta2 = cm.check_false_negatives(searchers_info)
 
     assert false_neg is False
     assert false_neg_2 is True

@@ -132,6 +132,7 @@ dmypy.json
 core/deprecated/
 core/make_graphs/
 experiments/
+.idea/
 
 # saved files
 *.pdf

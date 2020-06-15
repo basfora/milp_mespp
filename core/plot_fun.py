@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import os
 from core import extract_info as ext
-# from core import extract_info as ext
-# from igraph import *
 
 
 def compose_and_clean(path_to_folder: str):

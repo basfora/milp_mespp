@@ -536,5 +536,4 @@ def create_office_graph():
 
 
 if __name__ == "__main__":
-    create_office_graph()
-
+    create_grid_graph(3, 3)

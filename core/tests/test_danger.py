@@ -1,6 +1,5 @@
 from core import extract_info as ext
-from core.classes.class_danger import MyDanger
-import numpy as np
+from classes.class_danger import MyDanger
 
 
 def get_param():

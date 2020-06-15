@@ -4,13 +4,13 @@ from core import aux_classes as ac
 from core import extract_info as ext
 from core import milp_model_functions as mf
 from core import construct_model as cm
-from core.classes.class_belief import MyBelief
-from core.classes.class_target import MyTarget
-from core.classes.class_searcher import MySearcher
-from core.classes.class_solverData import MySolverData
-from gurobipy import *
+from classes.class_belief import MyBelief
+from classes.class_target import MyTarget
+from classes.class_searcher import MySearcher
+from classes.class_solverData import MySolverData
 import pickle
 import random
+from gurobipy import *
 
 # check gurobipy
 def run_my_simulator(exp_inputs):

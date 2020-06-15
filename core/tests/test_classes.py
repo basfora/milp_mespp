@@ -3,13 +3,13 @@ from core import construct_model as cm
 from core import create_parameters as cp
 from core import aux_classes as ac
 import numpy as np
-from core.classes.class_belief import MyBelief
-from core.classes.class_target import MyTarget
-from core.classes.class_searcher import MySearcher
-from core.classes.class_solverData import MySolverData
+from classes.class_belief import MyBelief
+from classes.class_target import MyTarget
+from classes.class_searcher import MySearcher
+from classes.class_solverData import MySolverData
 from core import analyze_results as ar
-from gurobipy import *
 from core import milp_model_functions as mf
+from gurobipy import *
 
 
 def parameters_7v_random_motion():

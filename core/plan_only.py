@@ -5,15 +5,10 @@ import os
 import numpy as np
 this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(this_path)
-from gurobipy import *
 from core import extract_info as ext
 from core import sim_fun as sf
 from core import retrieve_data as rd
-from core.classes.class_inputs import MyInputs
-from core.classes.class_belief import MyBelief
-from core.classes.class_searcher import MySearcher
-from core.classes.class_target import MyTarget
-from core import create_parameters as cp
+from classes.class_inputs import MyInputs
 
 
 def initialize_planner(my_graph, my_h):
