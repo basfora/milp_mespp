@@ -19,3 +19,21 @@ def test_get_set_searchers():
     assert S == [1, 2]
     assert m == 2
 
+
+def test_get_m_from_tuple():
+
+    x_s = dict()
+    # searcher position (1)
+    x_s[(1, 1, 0)] = 1
+    x_s[(1, 3, 1)] = 1
+    x_s[(1, 5, 2)] = 1
+    x_s[(1, 6, 3)] = 1
+
+    x_s[(2, 2, 0)] = 1
+    x_s[(2, 5, 1)] = 1
+    x_s[(2, 6, 2)] = 1
+    x_s[(2, 7, 3)] = 1
+
+    m = ext.get_m_from_xs(x_s)
+
+    assert m == 2

@@ -10,7 +10,6 @@ import numpy as np
 # get sets
 # --------------------
 
-
 def get_set_searchers(info_input):
     """Return set of searchers,
      S = {1,...m}"""
@@ -27,8 +26,21 @@ def get_set_searchers(info_input):
         print("Wrong type of data")
         m = None
         S = None
-
     return S, m
+
+
+def get_m_from_xs(x_searchers: dict):
+    """Get number of searchers from triple tuple (s, v, t)
+    UT-OK"""
+
+    x_keys = x_searchers.keys()
+
+    # list of s
+    s_in_keys = [k[0] for k in x_keys]
+    # max s
+    m = max(s_in_keys)
+
+    return m
 
 
 def get_set_time(deadline):
@@ -650,10 +662,61 @@ def get_graph_07():
     return g
 
 
+# -----------------------
+# convert data format
+# -----------------------
 
-# -----------------------
-# check values
-# -----------------------
+def path_to_xs(path: dict):
+    """Convert from pi(s, t) = v
+    to
+    x_s(s, v, t) = 1"""
+
+    x_searchers = {}
+
+    for k in path.keys():
+
+        # ignore first one (if it's temp_pi)
+        if k == 'current_searcher':
+            continue
+
+        s, t = get_from_tuple_key(k)
+        # get vertex searcher is currently in
+        v = path.get((s, t))
+
+        x_searchers[(s, v, t)] = 1
+
+    return x_searchers
+
+
+def get_all_from_xs(x_s):
+    """Return list of (s, v, t, value) tuples from x_s"""
+
+    my_list = []
+    for k in x_s.keys():
+        s, v, t = get_from_tuple_key(k)
+        value = x_s.get(k)
+        my_list.append((s, v, t, value))
+
+    return my_list
+
+
+def get_from_tuple_key(k):
+
+    # x_searchers (s, v, t)
+    if len(k) == 3:
+        s = k[0]
+        v = k[1]
+        t = k[2]
+        return s, v, t
+
+    # path (pi or temp_pi) --> (s, t)
+    elif len(k) == 2:
+        s = k[0]
+        t = k[1]
+        return s, t
+    else:
+        print('Error, tuple is wrong dimension')
+        return None
 
 
 def create_2tuple_keys(list1, list2):

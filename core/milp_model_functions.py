@@ -95,7 +95,7 @@ def add_variables(md, g, deadline: int, start, vertices_t, s_info=None):
 
 def solve_model(md, searchers_info: dict):
 
-    obj_fun, time_sol, gap, s_pos, b_target, threads = none_model_vars()
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = none_model_vars()
     threads = 0
 
     md.update()
@@ -108,14 +108,14 @@ def solve_model(md, searchers_info: dict):
         print('Optimization problem was infeasible.')
     elif md.Status == 2:
         # Optimal solution found.
-        s_pos, b_target = ar.query_variables(md, searchers_info)
+        x_searchers, b_target = ar.query_variables(md, searchers_info)
         obj_fun, time_sol, gap, threads = get_model_data(md)
     elif md.Status == 9:
         # time limit reached
         print('Time limit reached.')
         if md.SolCount > 0:
             # retrieve the best solution so far
-            s_pos, b_target = ar.query_variables(md, searchers_info)
+            x_searchers, b_target = ar.query_variables(md, searchers_info)
             obj_fun, time_sol, gap, threads = get_model_data(md)
     else:
         print('Error: ' + str(md.Status))
@@ -126,7 +126,7 @@ def solve_model(md, searchers_info: dict):
     # disposeDefaultEnv()
     # del md
 
-    return obj_fun, time_sol, gap, s_pos, b_target, threads
+    return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
 def none_model_vars():

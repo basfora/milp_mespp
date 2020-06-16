@@ -7,16 +7,18 @@ from core import sim_fun as sf
 
 def show_me_results(md, g, name_folder: str, searchers_info: dict, deadline: int):
 
-    s_pos, b_target = query_variables(md, searchers_info)
-    plot_all_steps(g, name_folder, s_pos, b_target, deadline)
+    x_searchers, b_target = query_variables(md, searchers_info)
+    plot_all_steps(g, name_folder, x_searchers, b_target, deadline)
 
 
-def query_variables(md, searchers_info: dict):
-    """query variable X to see the optimal path"""
-    S, m = ext.get_set_searchers(searchers_info)
+def query_variables(md, searchers_info=None):
+    """query variable X to get the optimal path
+    query variable beta to get target belief
+    return variables values as dictionaries
+    x_searchers[(s, v, t)], b_target[(v, t)]"""
 
     # save as dictionaries with searchers as keys
-    x_searchers = ext.create_dict(S, None)
+    x_searchers = {}
     b_target = {}
 
     t_max = 0
@@ -31,12 +33,8 @@ def query_variables(md, searchers_info: dict):
             v = int(my_var_name[my_var_name.find(",") + 1:my_var_name.rfind(",")])
             t = int(my_var_name[my_var_name.rfind(",") + 1:-1])
 
-            if x_searchers[s] is None:
-                x_searchers[s] = {}
-
-            if my_var_value > 0.5:
-                print('%s = %f ' % (my_var_name, my_var_value))
-                x_searchers[s][(v, t)] = 1
+            # print('%s = %f ' % (my_var_name, my_var_value))
+            x_searchers[(s, v, t)] = my_var_value
 
             if t > t_max:
                 t_max = t
@@ -49,40 +47,39 @@ def query_variables(md, searchers_info: dict):
             b_target[(v, t)] = my_var_value
 
     # make sure x is binary
-    # x_searchers = enforce_binary(x_searchers, t_max, S)
-    # b_target = enforce_sum_1(b_target, t_max)
+    x_searchers = enforce_binary(x_searchers, t_max)
+    b_target = enforce_sum_1(b_target, t_max)
 
-    # x_searchers[s][(v, t)]
+    # x_searchers[(s, v, t)] and b_target[(v, t)]
     return x_searchers, b_target
 
 
-def enforce_binary(x_searchers, t_max, S):
+def enforce_binary(x_searchers, t_max):
     """Enforce variable to be binary"""
 
     old_x_searchers = x_searchers
 
+    m = ext.get_m_from_xs(x_searchers)
+    S = ext.get_set_searchers(m)[0]
+
+    x_keys = old_x_searchers.keys()
+
     # loop searchers
     for s in S:
-        # s_var[(v, t)] = 0/1
-        s_var = x_searchers.get(s)
-
-        s_keys = s_var.keys()
-
         # loop through time
         for t in range(t_max + 1):
-
-            var_value = [s_var.get(k) for k in s_keys if t == k[1]]
-            v_t = [k for k in s_keys if t == k[1]]
+            v_t = [k[1] for k in x_keys if s == k[0] and t == k[2]]
+            var_value = [old_x_searchers.get((s, v, t)) for v in v_t]
 
             # find max value idx at time t
             mx = var_value.index(max(var_value))
 
             # everything else is zero
-            for k in v_t:
-                if k == v_t[mx]:
-                    x_searchers[s][k] = 1
+            for v in v_t:
+                if v == v_t[mx]:
+                    x_searchers[(s, v, t)] = 1
                 else:
-                    x_searchers[s][k] = 0
+                    x_searchers[(s, v, t)] = 0
 
     # for debugging only!
     if old_x_searchers != x_searchers:
@@ -108,7 +105,7 @@ def enforce_sum_1(b_target, t_max):
         # normalize
         for i in range(len(b_values)):
             k = v_t[i]
-            vl = round(b_values[i]/my_sum, 3)
+            vl = round(b_values[i]/my_sum, dc)
 
             b_target[k] = vl
 
@@ -117,13 +114,11 @@ def enforce_sum_1(b_target, t_max):
 
 def query_and_print_variables(md, searchers_info: dict):
     """query variable X to see the optimal path"""
-    info_vector = searchers_info.keys()
-    S, m = ext.get_set_searchers(info_vector)
-    # V, n = ext.get_set_vertices(g)
 
-    # save as dictionaries with searchers as keys
-    x_searchers = {s_name: {} for s_name in S}
-    b_target = {}   # np.zeros((n + 1, deadline + 2))
+    # save x variable as dictionary with keys (s, v, t)
+    x_searchers = {}
+    # save beta variable as dictionary with keys (v, t)
+    b_target = {}
 
     for var in md.getVars():
         my_var_name = var.varName
@@ -136,9 +131,9 @@ def query_and_print_variables(md, searchers_info: dict):
             t = int(my_var_name[6])
 
             if my_var_value >= 0.5:
-                x_searchers[s][v, t] = 1
+                x_searchers[(s, v, t)] = 1
             else:
-                x_searchers[s][v, t] = 0
+                x_searchers[(s, v, t)] = 0
 
         elif 'beta' in my_var_name:
             # print('%s %g' % (my_var_name, my_var_value))
@@ -153,22 +148,26 @@ def query_and_print_variables(md, searchers_info: dict):
     return x_searchers, b_target
 
 
-def plot_searchers_position(g, folder_name, my_layout, s_pos: dict, t: int):
+def plot_searchers_position(g, folder_name, my_layout, x_searchers: dict, t: int):
     """plot results of searchers position"""
-    m = len(s_pos)
+
+    m = ext.get_m_from_xs(x_searchers)
+
     V, n = ext.get_set_vertices(g)
-    S = ext.get_set_searchers(list(range(m)))[0]
+    S = ext.get_set_searchers(m)[0]
     g.vs["color"] = "white"
 
     for s in S:
-        my_searcher_pos = s_pos.get(s)
         for v in V:
-            v_idx = ext.get_python_idx(v)
-            my_value = my_searcher_pos.get((v, t))
+            my_value = x_searchers.get((s, v, t))
+
             if my_value == 1:
+                v_idx = ext.get_python_idx(v)
                 g.vs[v_idx]["color"] = "blue"
+
     name_file = folder_name + "/" + g["name"] + "_t" + str(t) + ".png"
     plot(g, name_file, layout=my_layout, figsize=(3, 3), bbox=(400, 400), margin=15, dpi=400)
+
     return name_file
 
 
@@ -195,13 +194,12 @@ def plot_target_belief(g, folder_name, my_layout, b_target: dict, t: int):
     return name_file
 
 
-def plot_all_steps(g, name_folder: str, s_pos: dict, b_target: dict, deadline: int):
+def plot_all_steps(g, name_folder: str, x_searchers: dict, b_target: dict, deadline: int):
     """Plot both searchers and target graph in one figure
     add title and relevant text
     save the figure in specified name folder"""
     Tau_ext = ext.get_set_ext_time(deadline)
 
-    # TODO find out how to plot in wanted x-y coordinates
     # my_layout = g.layout("kk")
     my_layout = g.layout("tree")
 
@@ -213,7 +211,7 @@ def plot_all_steps(g, name_folder: str, s_pos: dict, b_target: dict, deadline: i
 
     for t in Tau_ext:
         tgt_file = plot_target_belief(g, name_folder, my_layout, b_target, t)
-        s_file = plot_searchers_position(g, name_folder, my_layout, s_pos, t)
+        s_file = plot_searchers_position(g, name_folder, my_layout, x_searchers, t)
         b0 = b_target.get((0, t))
         mount_frame(s_file, tgt_file, name_folder, b0, t, deadline)
 
@@ -222,7 +220,6 @@ def plot_all_steps(g, name_folder: str, s_pos: dict, b_target: dict, deadline: i
     # whole path
     path_now = path_this_file + "/" + name_folder
     compose_video(path_now)
-
 
 
 def mount_frame(s_file: str, tgt_file: str, folder_name: str, b_0, t: int, deadline: int):

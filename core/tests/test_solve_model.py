@@ -39,21 +39,18 @@ def test_position_searchers():
     # Optimize model
     md.optimize()
 
-    s_pos, b_target = ar.query_variables(md, searchers_info)
-
-    s1_pos = s_pos.get(1)
-    s2_pos = s_pos.get(2)
+    x_s, b_target = ar.query_variables(md, searchers_info)
 
     # check searcher position (1)
-    assert s1_pos.get((1, 0)) == 1
-    assert s1_pos.get((3, 1)) == 1
-    assert s1_pos.get((5, 2)) == 1
-    assert s1_pos.get((6, 3)) == 1
+    assert x_s.get((1, 1, 0)) == 1
+    assert x_s.get((1, 3, 1)) == 1
+    assert x_s.get((1, 5, 2)) == 1
+    assert x_s.get((1, 6, 3)) == 1
     # check searcher position (2)
-    assert s2_pos.get((2, 0)) == 1
-    assert s2_pos.get((5, 1)) == 1
-    assert s2_pos.get((6, 2)) == 1
-    assert s2_pos.get((7, 3)) == 1
+    assert x_s.get((2, 2, 0)) == 1
+    assert x_s.get((2, 5, 1)) == 1
+    assert x_s.get((2, 6, 2)) == 1
+    assert x_s.get((2, 7, 3)) == 1
 
     # check target belief t = 0
     assert b_target.get((0, 0)) == 0

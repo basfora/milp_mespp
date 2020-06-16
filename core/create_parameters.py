@@ -167,7 +167,6 @@ def searcher_random_pos(v_possible, m: int,  my_seed=None):
     """Choose random vertices for the starting point of the searchers
     positions are given in model indexing (1,2...)"""
 
-
     # get set of searchers
     S, m = ext.get_set_searchers(m)
 

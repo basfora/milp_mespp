@@ -12,7 +12,7 @@ import pickle
 import random
 from gurobipy import *
 
-# check gurobipy
+
 def run_my_simulator(exp_inputs):
     # INITIALIZE
     disposeDefaultEnv()
@@ -220,14 +220,14 @@ def run_solver(g, horizon, searchers_info, b0, M_target, gamma=0.99, opt='centra
     """Run solver according to type of planning specified"""
 
     if opt == 'central':
-        obj_fun, time_sol, gap, s_pos, b_target, threads = central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout)
+        obj_fun, time_sol, gap, x_searchers, b_target, threads = central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout)
 
     elif opt == 'distributed':
-        obj_fun, time_sol, gap, s_pos, b_target, threads = distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout, n_inter, pre_solve)
+        obj_fun, time_sol, gap, x_searchers, b_target, threads = distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout, n_inter, pre_solve)
     else:
-        obj_fun, time_sol, gap, s_pos, b_target, threads = mf.none_model_vars()
+        obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.none_model_vars()
 
-    return obj_fun, time_sol, gap, s_pos, b_target, threads
+    return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
 def central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout):
@@ -251,7 +251,7 @@ def central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout):
     mf.set_solver_parameters(md, gamma, horizon, my_vars, timeout)
 
     # solve and save results
-    obj_fun, time_sol, gap, s_pos, b_target, threads = mf.solve_model(md, searchers_info)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.solve_model(md, searchers_info)
 
     # clean things
     md.reset()
@@ -261,7 +261,7 @@ def central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout):
     del md
 
     # clean things
-    return obj_fun, time_sol, gap, s_pos, b_target, threads
+    return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
 def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout=5, n_inter=1, pre_solver=-1):
@@ -317,7 +317,7 @@ def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout
                     b_target[(v, 0)] = el
                     v += 1
 
-                x_searchers = keep_searchers_still(temp_pi, m)
+                x_searchers = keep_all_still(temp_pi)
 
             # clean things
                 # clean things
@@ -358,24 +358,9 @@ def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout
                     return obj_fun_list, time_sol_list, gap_list, x_searchers, b_target, threads
 
 
-def keep_searchers_still(temp_pi, m):
+def keep_all_still(temp_pi):
 
-    x_searchers = ext.create_dict(list(range(1, m + 1)), None)
-
-    for k in temp_pi.keys():
-
-        # ignore first one
-        if k == 'current_searcher':
-            continue
-
-        s_id = k[0]
-        t = k[1]
-        v = temp_pi.get(k)
-
-        if x_searchers[s_id] is None:
-            x_searchers[s_id] = {}
-
-        x_searchers[s_id][(v, t)] = 1
+    x_searchers = ext.path_to_xs(temp_pi)
 
     print('Keeping searchers still.')
 
@@ -402,13 +387,13 @@ def init_temporary_path(searchers_info: dict, horizon: int):
 
 
 def update_temporary_path(x_s: dict, temp_pi: dict, my_s: int):
-    """Integrate computed path of a single searcher in the temporary path"""
+    """Integrate computed path of a single searcher in the temporary path
+    temp_pi(s, t) = v"""
 
-    path_my_s = x_s[my_s]
-
-    for k in path_my_s.keys():
-        if path_my_s.get(k) == 1:
-            temp_pi[my_s, k[1]] = k[0]
+    for k in x_s.keys():
+        s, v, t = ext.get_from_tuple_key(k)
+        if s == my_s and x_s.get(k) == 1:
+            temp_pi[(my_s, t)] = v
 
     return temp_pi
 
@@ -417,17 +402,19 @@ def get_planned_path(x_s: dict, V: list, T: list, searchers=None):
     """Get x variables which are one and save it as {(s_id, time): v}"""
     s_pi = {}
 
-    for s_id in x_s.keys():
-        my_searcher_pos = x_s.get(s_id)
+    m = ext.get_m_from_xs(x_s)
+    S = ext.get_set_searchers(m)[0]
+
+    for s in S:
         path_planned = []
         for t in T:
             for v in V:
-                my_value = my_searcher_pos.get((v, t))
+                my_value = x_s.get((s, v, t))
                 if my_value == 1:
-                    s_pi[s_id, t] = v
+                    s_pi[s, t] = v
                     path_planned.append(v)
         if searchers is not None:
-            searchers[s_id].store_path_planned(path_planned)
+            searchers[s].store_path_planned(path_planned)
 
     return searchers, s_pi
 

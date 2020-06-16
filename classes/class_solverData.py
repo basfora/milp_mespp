@@ -23,7 +23,7 @@ class MySolverData:
         # gap for each time the solver runs
         self.gap = {}
 
-        self.s_pos = {}
+        self.x_s = {}
 
         self.belief = {}
 
@@ -44,7 +44,7 @@ class MySolverData:
 
         self.gamma = 0.99
 
-    def store_new_data(self, obj_fun, time_sol, gap, threads: int, s_pos: dict, b_target: dict, t: int,
+    def store_new_data(self, obj_fun, time_sol, gap, threads: int, x_s: dict, b_target: dict, t: int,
                        horizon=None):
         """call after solving each time
         s_pos[s] = {(v, t) = 0 or 1}"""
@@ -57,7 +57,7 @@ class MySolverData:
 
         self.threads[t] = threads
 
-        self.s_pos[t] = s_pos
+        self.x_s[t] = x_s
 
         self.belief[t] = b_target
 

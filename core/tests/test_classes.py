@@ -250,7 +250,7 @@ def test_solver_data_class():
     # Optimize model
     md.optimize()
 
-    s_pos, b_target = ar.query_variables(md, searchers_info)
+    x_s, b_target = ar.query_variables(md, searchers_info)
 
     obj_fun = md.objVal
     gap = md.MIPGap
@@ -261,13 +261,13 @@ def test_solver_data_class():
 
     my_data = MySolverData(horizon, deadline, theta, g, 'central')
     t = 0
-    my_data.store_new_data(obj_fun, time_sol, gap, threads, s_pos, b_target, t, horizon)
+    my_data.store_new_data(obj_fun, time_sol, gap, threads, x_s, b_target, t, horizon)
 
     assert my_data.obj_value[0] == obj_fun
     assert my_data.solve_time[0] == time_sol
     assert my_data.threads[0] == md.Params.Threads
     assert my_data.gap[0] == gap
-    assert my_data.s_pos[0] == s_pos
+    assert my_data.x_s[0] == x_s
     assert my_data.belief[0] == b_target
     assert my_data.solver_type == 'central'
     assert my_data.threads[0] == threads

@@ -205,7 +205,7 @@ def get_from_solver_data(solver_data, m):
         sol_time = sol_t
 
     # get computed path
-    computed_path = solver_data.s_pos[t]
+    computed_path = solver_data.x_s[t]
 
     return computed_path, obj_value, sol_time
 
