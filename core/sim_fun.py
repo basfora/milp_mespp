@@ -1,7 +1,6 @@
 import core.construct_model
 from core import create_parameters as cp
 from core.deprecated import pre_made_inputs as pmi
-from core import aux_classes as ac
 from core import extract_info as ext
 from core import milp_model_functions as mf
 from core import construct_model as cm
