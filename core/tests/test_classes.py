@@ -1,14 +1,13 @@
 from core import extract_info as ext
 from core import construct_model as cm
 from core import create_parameters as cp
-from core import aux_classes as ac
+from core import analyze_results as ar
+from core import milp_model_functions as mf
 import numpy as np
 from classes.class_belief import MyBelief
 from classes.class_target import MyTarget
 from classes.class_searcher import MySearcher
 from classes.class_solverData import MySolverData
-from core import analyze_results as ar
-from core import milp_model_functions as mf
 from gurobipy import *
 
 
@@ -27,8 +26,9 @@ def parameters_7v_random_motion():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
+    searchers = cp.create_searchers(g, v_searchers)
     n = 7
-    return n, b_0, M, searchers_info
+    return n, b_0, M, searchers_info, searchers
 
 
 def parameters_7v_random_motion2():
@@ -46,14 +46,15 @@ def parameters_7v_random_motion2():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
+    searchers = cp.create_searchers(g, v_searchers)
     n = 7
-    return n, b_0, M, searchers_info, g
+    return n, b_0, M, searchers_info, g, searchers
 
 
 def test_belief_class_init():
     """Test class target"""
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     b = MyBelief(b_0)
 
@@ -65,7 +66,7 @@ def test_belief_class_init():
 
 
 def test_belief_class_update():
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     # searchers position
     new_pos = dict()
@@ -75,29 +76,42 @@ def test_belief_class_update():
     t = 0
 
     b = MyBelief(b_0)
+    b1 = MyBelief(b_0)
+
     # class method, update belief
     b.update(searchers_info, new_pos, M, n)
+    b1.update(searchers, new_pos, M, n)
 
     # find the product of the capture matrices, s = 1...m
-    prod_C = ac.product_capture_matrix(searchers_info, new_pos, n)
+    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+    prod_C1 = cm.product_capture_matrix(searchers, new_pos, n)
 
     # assemble the matrix for multiplication
-    big_M = ac.assemble_big_matrix(n, M)
+    big_M = cm.assemble_big_matrix(n, M)
     new_belief = np.array(b_0).dot(big_M).dot(prod_C)
     a = new_belief.tolist()
 
+    assert prod_C.all() == prod_C1.all()
+
     # make sure no information was changed
     assert b.start_belief == b_0
+    assert b1.start_belief == b_0
+
     assert b.stored[0] == b_0
+    assert b1.stored[0] == b_0
     assert b.milp_init_belief == b_0
+    assert b1.milp_init_belief == b_0
     # make sure it was updated
     nb = b.stored[1]
+    nb1 = b1.stored[1]
     assert isinstance(nb, list)
+    assert isinstance(nb1, list)
     assert b.stored[1] == a
+    assert b1.stored[1] == a
 
 
 def test_belief_update_init():
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     b = MyBelief(b_0)
     new_belief = [0, 0.5, 0, 0, 0, 0, 0.5, 0]
@@ -117,7 +131,7 @@ def test_target_class_init():
     v_target = [6, 7]
     v_target_true = 7
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M, v_target_true)
 
@@ -142,7 +156,7 @@ def test_target_class_init2():
 
     v_target = [6, 7]
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     bad_inited = False
     try:
@@ -160,7 +174,7 @@ def test_target_class_init2():
 
 def test_target_update_status():
     v_target = [7]
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M)
 
@@ -172,7 +186,7 @@ def test_target_update_status():
 
 def test_target_evolve_position():
     v_target = [7]
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M)
 
@@ -194,13 +208,16 @@ def test_target_evolve_position():
 
 def test_searcher_class():
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
 
-    s = MySearcher(1, searchers_info)
+    s = searchers[1]
 
     assert s.id == 1
     assert s.start == 1
-    assert s.capture_matrices == cm.get_all_capture_matrices(searchers_info, 1)
+    assert isinstance(s.capture_matrices, dict)
+    assert isinstance(cm.get_all_capture_matrices(searchers_info, 1), dict)
+
+    assert all(s.capture_matrices) == all(cm.get_all_capture_matrices(searchers_info, 1))
     assert s.init_milp == 1
     assert s.catcher is False
     assert len(s.path_planned) == 0
@@ -233,14 +250,15 @@ def test_searcher_class():
 def test_solver_data_class():
 
     horizon = 3
-    n, b_0, M, searchers_info, g = parameters_7v_random_motion2()
+    n, b_0, M, searchers_info, g, searchers = parameters_7v_random_motion2()
     # solve
     # create model
     md = Model("my_model")
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
+    start1, vertices_t1, times_v1 = cm.get_vertices_and_steps(g, horizon, searchers)
 
-    my_vars = mf.add_variables(md, g, horizon, start, vertices_t, )
+    my_vars = mf.add_variables(md, g, horizon, start, vertices_t)
 
     mf.add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b_0, M)
 
@@ -250,7 +268,7 @@ def test_solver_data_class():
     # Optimize model
     md.optimize()
 
-    x_s, b_target = ar.query_variables(md, searchers_info)
+    x_s, b_target = ar.query_variables(md)
 
     obj_fun = md.objVal
     gap = md.MIPGap
@@ -262,6 +280,10 @@ def test_solver_data_class():
     my_data = MySolverData(horizon, deadline, theta, g, 'central')
     t = 0
     my_data.store_new_data(obj_fun, time_sol, gap, threads, x_s, b_target, t, horizon)
+
+    assert all(start1) == all(start)
+    assert all(vertices_t) == all(vertices_t1)
+    assert all(times_v) == all(times_v1)
 
     assert my_data.obj_value[0] == obj_fun
     assert my_data.solve_time[0] == time_sol

@@ -1,6 +1,7 @@
 from igraph import *
 import numpy as np
 from core import extract_info as ext
+from classes.class_searcher import MySearcher
 import pickle
 import random
 
@@ -83,8 +84,6 @@ def my_searchers_info(g, v0, capture_range=0, zeta=None):
 
     # size of capture matrix
     nu = n + 1
-    # my_aux = {}
-    # TODO check my_aux
     # create dict
     searchers_info = {}
     for s in S:
@@ -96,6 +95,37 @@ def my_searchers_info(g, v0, capture_range=0, zeta=None):
         idx = ext.get_python_idx(s)
         searchers_info.update({s: {'start': v0[idx], 'c_matrix': my_aux, 'zeta': zeta}})
     return searchers_info
+
+
+def create_searchers(g, v0, capture_range=0, zeta=None):
+    """Give searchers info (dictionary with id number as keys).
+            Nested: initial position, capture matrices for each vertex"""
+    # get set of searchers based on initial vertex for searchers
+    S = ext.get_set_searchers(v0)[0]
+    # get graph vertices
+    V, n = ext.get_set_vertices(g)
+
+    # check to see if it's a vertex in the graph
+    if any(v0) not in V:
+        print("Vertex out of range, V = {1, 2...n}")
+        return None
+
+    # size of capture matrix
+    nu = n + 1
+    # create dict
+    searchers = {}
+    for s_id in S:
+        my_aux = {}
+        for v in V:
+            # loop through vertices to get capture matrices
+            C = rule_intercept(v, nu, capture_range, zeta, g)
+            my_aux[v] = C
+        idx = ext.get_python_idx(s_id)
+        C_all = my_aux
+        s = MySearcher(s_id, v0[idx], C_all, capture_range, zeta)
+
+        searchers[s_id] = s
+    return searchers
 
 
 def rule_intercept(v, nu, capture_range=0, zeta=None, g=None):

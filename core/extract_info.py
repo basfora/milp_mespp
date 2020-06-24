@@ -83,11 +83,22 @@ def get_set_ext_vertices(g):
     return V_ext
 
 
-def get_start_set(searchers_info: dict):
+def get_start_set(searchers: dict):
+
     start = []
-    for k in searchers_info.keys():
-        dummy_var = searchers_info[k]["start"]
-        start.append(dummy_var)
+
+    # TODO take out s_info once code is clean
+    # s_info or searchers
+    for s_id in searchers.keys():
+        s = searchers[s_id]
+
+        # old form, extract from s_info
+        if isinstance(s, dict):
+            start_s = s["start"]
+        else:
+            start_s = s.current_pos
+        start.append(start_s)
+
     return start
 
 

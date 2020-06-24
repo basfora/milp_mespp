@@ -1,10 +1,9 @@
 import pytest
-
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
 from core import sim_fun as sf
-from gurobipy import *
+import numpy as np
 
 
 def test_get_vertices_and_steps_start():
@@ -117,145 +116,6 @@ def test_get_vertices_and_steps_distributed():
     assert vertices_t.get((2, 4)) == [8]
 
 
-def test_add_searcher_variables_x():
-    """Test for expected X in simple graph"""
-    # load graph
-    graph_file = 'G_7V7E.p'
-    g = ext.get_graph(graph_file)
-    v0 = [3, 1]
-    deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
-
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
-
-    md = Model("my_model")
-
-    var_for_test = cm.add_searcher_variables(md, g, start, vertices_t, deadline)[1]
-
-    assert var_for_test.get('x')[0] == 'x[1,3,0]'
-
-    assert var_for_test.get('x')[1] == 'x[1,1,1]'
-    assert var_for_test.get('x')[2] == 'x[1,3,1]'
-    assert var_for_test.get('x')[3] == 'x[1,5,1]'
-
-    assert var_for_test.get('x')[4] == 'x[1,1,2]'
-    assert var_for_test.get('x')[5] == 'x[1,2,2]'
-    assert var_for_test.get('x')[6] == 'x[1,3,2]'
-    assert var_for_test.get('x')[7] == 'x[1,5,2]'
-    assert var_for_test.get('x')[8] == 'x[1,6,2]'
-
-    assert var_for_test.get('x')[9] == 'x[1,1,3]'
-    assert var_for_test.get('x')[10] == 'x[1,2,3]'
-    assert var_for_test.get('x')[11] == 'x[1,3,3]'
-    assert var_for_test.get('x')[12] == 'x[1,4,3]'
-    assert var_for_test.get('x')[13] == 'x[1,5,3]'
-    assert var_for_test.get('x')[14] == 'x[1,6,3]'
-    assert var_for_test.get('x')[15] == 'x[1,7,3]'
-
-
-def test_add_searcher_variables_y():
-    """Test for expected Y in simple graph"""
-    # load graph
-    graph_file = 'G_7V7E.p'
-    g = ext.get_graph(graph_file)
-    v_searchers = [3, 1]
-    deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v_searchers)
-
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
-
-    md = Model("my_model")
-
-    var_for_test = cm.add_searcher_variables(md, g, start, vertices_t, deadline)[1]
-
-    assert var_for_test.get('y')[0] == 'y[1,3,1,0]'
-    assert var_for_test.get('y')[1] == 'y[1,3,5,0]'
-    assert var_for_test.get('y')[2] == 'y[1,3,3,0]'
-
-    assert var_for_test.get('y')[3] == 'y[1,1,2,1]'
-    assert var_for_test.get('y')[4] == 'y[1,1,3,1]'
-    assert var_for_test.get('y')[5] == 'y[1,1,1,1]'
-
-    assert var_for_test.get('y')[6] == 'y[1,3,1,1]'
-    assert var_for_test.get('y')[7] == 'y[1,3,5,1]'
-    assert var_for_test.get('y')[8] == 'y[1,3,3,1]'
-
-
-def test_add_target_variables_b():
-    """Test for expected B in simple graph"""
-    # load graph
-    graph_file = 'G_7V7E.p'
-    g = ext.get_graph(graph_file)
-    deadline = 3
-
-    md = Model("my_model")
-
-    var_for_test = cm.add_target_variables(md, g, deadline)[1]
-
-    assert var_for_test.get('beta')[0] == '[0,0]'
-    assert var_for_test.get('beta')[1] == '[1,0]'
-    assert var_for_test.get('beta')[2] == '[2,0]'
-    assert var_for_test.get('beta')[3] == '[3,0]'
-    assert var_for_test.get('beta')[4] == '[4,0]'
-    assert var_for_test.get('beta')[5] == '[5,0]'
-    assert var_for_test.get('beta')[6] == '[6,0]'
-    assert var_for_test.get('beta')[7] == '[7,0]'
-
-
-def test_add_target_variables_alpha():
-    """Test for expected B in simple graph"""
-    # load graph
-    graph_file = 'G_7V7E.p'
-    g = ext.get_graph(graph_file)
-    deadline = 3
-
-    md = Model("my_model")
-
-    var_for_test = cm.add_target_variables(md, g, deadline)[1]
-
-    assert var_for_test.get('alpha')[0] == '[1,1]'
-    assert var_for_test.get('alpha')[1] == '[2,1]'
-    assert var_for_test.get('alpha')[2] == '[3,1]'
-
-    assert var_for_test.get('alpha')[-3] == '[5,3]'
-    assert var_for_test.get('alpha')[-2] == '[6,3]'
-    assert var_for_test.get('alpha')[-1] == '[7,3]'
-
-
-def test_get_var():
-    """Test for expected B in simple graph"""
-    # load graph
-    graph_file = 'G_7V7E.p'
-    g = ext.get_graph(graph_file)
-    v0 = [3, 1]
-    deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
-
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
-
-    md = Model("my_model")
-    # time indexes
-    Tau_ = ext.get_idx_time(deadline)
-
-    searchers_vars = cm.add_searcher_variables(md, g, start, vertices_t, deadline)[0]
-    # variables related to target position belief and capture
-    target_vars = cm.add_target_variables(md, g, deadline)[0]
-
-    # get my variables together in one dictionary
-    my_vars = {}
-    my_vars.update(searchers_vars)
-    my_vars.update(target_vars)
-
-    my_chosen_var = cm.get_var(my_vars, 'x')
-    my_empty_var = cm.get_var(my_vars, 'f')
-
-    assert my_chosen_var == searchers_vars.get('x')
-    assert my_empty_var is None
-
-
 def test_neighbors():
     # load graph
     graph_file = 'G_7V7E.p'
@@ -275,6 +135,269 @@ def test_neighbors():
     v_possible = cm.get_next_vertices(g, s, v, t, vertices_t, Tau_ext)
 
     assert v_possible == [1, 5, 3]
+
+
+# test previous aux_classes
+def test_assemble_big_matrix():
+    """test assemble of [1, 0; 0, M]"""
+
+    n, b_0, M, searchers_info = parameters_7v_random_motion()
+
+    big_M = cm.assemble_big_matrix(n, M)
+
+    bigM = cm.change_type(big_M, 'list')
+
+    assert isinstance(bigM, list)
+    assert bigM[0][0] == 1
+    assert bigM[0][1] == 0
+    assert bigM[0][2] == 0
+    assert bigM[0][3] == 0
+    assert bigM[0][4] == 0
+    assert bigM[0][5] == 0
+    assert bigM[0][6] == 0
+    assert bigM[0][7] == 0
+
+    assert bigM[1][0] == 0
+    assert round(bigM[1][1], 2) == 0.33
+    assert round(bigM[1][2], 2) == 0.33
+    assert round(bigM[1][4], 2) == 0
+
+    assert bigM[2][0] == 0
+    assert bigM[3][0] == 0
+    assert bigM[4][0] == 0
+    assert bigM[5][0] == 0
+    assert bigM[6][0] == 0
+    assert bigM[7][0] == 0
+
+
+def test_assemble_big_matrix2():
+    """test assemble of [1, 0; 0, M]"""
+    # input parameters for graph
+    n_vertex = 7
+
+    graph_name = 'G_7V7E.p'
+    g = ext.get_graph(graph_name)
+
+    # input for target initial vertices (belief)
+    v_target = [7]
+
+    # type of motion
+    target_motion = 'static'
+    belief_distribution = 'uniform'
+    b_0, M = cp.my_target_motion(g, v_target, belief_distribution, target_motion)
+
+    big_M = cm.assemble_big_matrix(n_vertex, M)
+
+    bigM = cm.change_type(big_M, 'list')
+
+    assert isinstance(bigM, list)
+    assert bigM[0][0] == 1
+    assert bigM[0][1] == 0
+    assert bigM[0][2] == 0
+    assert bigM[0][3] == 0
+    assert bigM[0][4] == 0
+    assert bigM[0][5] == 0
+    assert bigM[0][6] == 0
+    assert bigM[0][7] == 0
+
+    assert bigM[1][0] == 0
+    assert bigM[1][1] == 1
+    assert bigM[2][2] == 1
+    assert bigM[3][3] == 1
+    assert bigM[4][4] == 1
+    assert bigM[5][5] == 1
+    assert bigM[6][6] == 1
+    assert bigM[7][7] == 1
+
+    assert bigM[2][0] == 0
+    assert bigM[3][0] == 0
+    assert bigM[4][0] == 0
+    assert bigM[5][0] == 0
+    assert bigM[6][0] == 0
+    assert bigM[7][0] == 0
+
+
+def test_change_type():
+    A1 = np.array([[1, 2], [3, 4]])
+    A2 = [1, 2, 3, 4, 5]
+
+    B1 = cm.change_type(A1, 'list')
+    B2 = cm.change_type(A2, 'array')
+
+    B3 = cm.change_type(A1, 'array')
+    B4 = cm.change_type(A2, 'list')
+
+    assert isinstance(B1, list)
+    assert isinstance(B2, np.ndarray)
+    assert B3 is False
+    assert B4 is False
+
+
+def test_sample_vertex():
+
+    my_vertices = [1, 2, 3, 4, 5, 6, 7]
+    prob_move = [0.5, 0.5, 0, 0, 0, 0, 0]
+    count1 = 0
+    count2 = 0
+    count3 = 0
+    N = 10000
+    i = 0
+    while i < N:
+        my_vertex = cm.sample_vertex(my_vertices, prob_move)
+        if my_vertex == 1:
+            count1 = count1 + 1
+        elif my_vertex == 2:
+            count2 = count2 + 1
+        else:
+            count3 += count3
+        i = i + 1
+
+    assert count3 == 0
+    assert (count1 >= N/2 - 0.1 * N) and (count1 <= N/2 + 0.1 * N)
+    assert (count2 >= N / 2 - 0.1 * N) and (count2 <= N / 2 + 0.1 * N)
+
+
+def test_probability_move():
+
+    n, b_0, M, searchers_info = parameters_7v_random_motion()
+
+    prob_v = {}
+    v = {}
+    for i in range(1, 8):
+        v[i], prob_v[i] = cm.probability_move(M, i)
+
+    assert v[1] == [1, 2, 3]
+    assert [round(i, 2) for i in prob_v[1]] == [0.33, 0.33, 0.33]
+    assert v[2] == [1, 2, 4, 5]
+    assert prob_v[2] == [0.25, 0.25, 0.25, 0.25]
+    assert v[3] == [1, 3, 5]
+    assert [round(i, 2) for i in prob_v[3]] == [0.33, 0.33, 0.33]
+    assert v[4] == [2, 4]
+    assert prob_v[4] == [0.5, 0.5]
+    assert v[5] == [2, 3, 5, 6]
+    assert prob_v[5] == [0.25, 0.25, 0.25, 0.25]
+    assert v[6] == [5, 6, 7]
+    assert [round(i, 2) for i in prob_v[6]] == [0.33, 0.33, 0.33]
+    assert v[7] == [6, 7]
+    assert prob_v[7] == [0.5, 0.5]
+
+
+def test_product_capture_matrix():
+
+    # load graph
+    graph_file = 'G_7V7E.p'
+    g = ext.get_graph(graph_file)
+    # initial searcher vertices
+    v_searchers = [1]
+    # type of motion
+    target_motion = 'random'
+    belief_distribution = 'uniform'
+    searchers_info = cp.my_searchers_info(g, v_searchers)
+
+    s = 1
+    v = 1
+    t = 0
+
+    C1 = cm.get_capture_matrix(searchers_info, s, v)
+
+    new_pos = {}
+    new_pos[s] = v
+
+    prod_C = cm.product_capture_matrix(searchers_info, new_pos, 7)
+
+    assert prod_C.all() == C1.all()
+
+
+def test_product_capture_matrix2():
+
+    n, b_0, M, searchers_info = parameters_7v_random_motion()
+
+    C1 = cm.get_capture_matrix(searchers_info, 1, 1)
+    C2 = cm.get_capture_matrix(searchers_info, 2, 2)
+    correct_prod = C1 * C2
+
+    new_pos = {}
+    new_pos[1] = 1
+    new_pos[2] = 2
+    t = 0
+
+    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+
+    assert prod_C.all() == correct_prod.all()
+
+
+def test_belief_update_equation():
+
+    n, b_0, M, searchers_info = parameters_7v_random_motion()
+
+    new_pos = dict()
+    new_pos[1] = 1
+    new_pos[2] = 2
+
+    # find the product of the capture matrices, s = 1...m
+    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+
+    # assemble the matrix for multiplication
+    big_M = cm.assemble_big_matrix(n, M)
+
+    new_belief = cm.belief_update_equation(b_0, big_M, prod_C)
+
+    init_belief = cm.change_type(b_0, 'array')
+    my_belief = init_belief.dot(big_M).dot(prod_C)
+
+    my_belief = my_belief.tolist()
+
+    assert len(new_belief) == len(b_0)
+    assert new_belief == my_belief
+
+
+def test_get_true_position():
+
+    # one possible vertex
+    v1 = [1]
+    pos1 = cm.get_true_position(v1)
+
+    # more then one vertex, no idx provided
+    v2 = [1, 2, 3]
+    pos2 = cm.get_true_position(v2)
+    pos3 = cm.get_true_position(v2)
+
+    # more then one vertex, idx provided
+    pos4 = cm.get_true_position(v2, 0)
+    pos5 = cm.get_true_position(v2, 1)
+    pos6 = cm.get_true_position(v2, 3)
+
+    assert pos1 == v1[0]
+    assert pos2 in set(v2)
+    assert pos3 in set(v2)
+    assert pos4 == v2[0]
+    assert pos5 == v2[1]
+    assert pos6 == v2[2]
+
+
+def parameters_7v_random_motion():
+    """Parameters pre-defined for unit tests"""
+    # load graph
+    graph_file = 'G_7V7E.p'
+    g = ext.get_graph(graph_file)
+    # input for target initial vertices (belief)
+    v_target = [7]
+    # initial searcher vertices
+    v_searchers = [1, 2]
+    deadline = 3
+    # type of motion
+    target_motion = 'random'
+    belief_distribution = 'uniform'
+    # initialize parameters
+    b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
+    n = 7
+    return n, b_0, M, searchers_info
+
+
+
+
+
+
 
 
 # def test_3vertices_var_x():

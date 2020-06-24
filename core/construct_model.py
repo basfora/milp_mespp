@@ -1,17 +1,5 @@
 import numpy as np
 from core import extract_info as ext
-from gurobipy import *
-
-
-def get_var(my_vars: dict, name: str):
-    """Retrieve variable from my_var dictionary according to name"""
-    desired_var = my_vars.get(name)
-    if desired_var is not None:
-        return desired_var
-    else:
-        var_names = 'x, y, alpha, beta, zeta, psi'
-        print('No variable with this name, current model accepts only:' + var_names)
-        return None
 
 
 def init_dict_variables(n_var: int):
@@ -194,253 +182,6 @@ def get_previous_vertices(g, s: int, v: int, t: int, vertices_t: dict):
         return v_t_previous
 
 
-def add_searcher_variables(md, g, start: list, vertices_t: dict, deadline: int):
-    """Add variables related to the searchers on the model:
-    searchers location at each time step, X
-    searchers movement from t to t + 1, Y"""
-
-    [X, Y] = init_dict_variables(2)
-
-    S, m = ext.get_set_searchers(start)
-
-    var_for_test = {}
-    list_x_name = []
-    list_y_name = []
-
-    # Tau_ = ext.get_idx_time(deadline)
-    Tau_ext = ext.get_set_ext_time(deadline)
-
-    # searcher s is located at vertex v at time t
-    for s in S:
-        for t in Tau_ext:
-            # get vertices that searcher s can be at time t (last t needs to be dummy goal vertex)
-            # v_t returns the label of the vertices
-            v_t = vertices_t.get((s, t))
-            for v in v_t:
-                # variable for: searcher position --  for each node the searcher can be at each time
-                dummy_x_name = "x[%d,%d,%d]" % (s, v, t)
-                if dummy_x_name not in list_x_name:
-                    # if didn't add already, do it
-                    X[s, v, t] = md.addVar(vtype="BINARY", name=dummy_x_name)
-                    list_x_name.append(dummy_x_name)
-
-                # find Y[s, u, v, t] : from u, searcher s can move to u at t + 1
-                # returns vertices labels
-                my_next_v = get_next_vertices(g, s, v, t, vertices_t, Tau_ext)
-                if my_next_v is not None:
-                    for u in my_next_v:
-                        dummy_y_name = "y[%d,%d,%d,%d]" % (s, v, u, t)
-                        if dummy_y_name not in list_y_name:
-                            Y[s, v, u, t] = md.addVar(vtype="BINARY", name=dummy_y_name)
-                            list_y_name.append(dummy_y_name)
-
-    var_for_test.update({'x': list_x_name})
-    var_for_test.update({'y': list_y_name})
-
-    my_vars = {'x': X, 'y': Y}
-    return my_vars, var_for_test
-
-
-def add_target_variables(md, g, deadline: int, s_info=None):
-    """Add variables related to the target and capture events:
-    belief variable, B
-    interception-related variables: belief vector composition, beta
-    belief evolution, alpha
-    capture event, zeta and psi
-    """
-    # TODO test this
-
-    V = ext.get_set_vertices(g)[0]
-
-    Tau_ext = ext.get_set_ext_time(deadline)
-    Tau = ext.get_set_time(deadline)
-
-    V_ext = ext.get_set_ext_vertices(g)
-
-    var_for_test = {}
-    list_beta_name = []
-    list_alpha_name = []
-    list_delta_name = []
-
-    [beta, beta_s, alpha, psi, delta] = init_dict_variables(5)
-
-    if s_info is not None:
-        false_neg, zeta = check_false_negatives(s_info)
-        S = ext.get_set_searchers(s_info)[0]
-    else:
-        false_neg = False
-        S = None
-
-    # alpha and psi: only exist from 1, 2.., T
-    for t in Tau:
-        for v in V:
-            dummy_a_name = "[%d,%d]" % (v, t)
-            alpha[v, t] = md.addVar(vtype="CONTINUOUS", lb=0.0, ub=1.0, name="alpha" + dummy_a_name)
-
-            list_alpha_name.append(dummy_a_name)
-
-            if false_neg:
-                for s in S:
-                    dummy_delta_name = "[%d,%d,%d]" % (s, v, t)
-                    psi[s, v, t] = md.addVar(vtype="BINARY", name="psi" + dummy_delta_name)
-                    delta[s, v, t] = md.addVar(vtype="CONTINUOUS", lb=0.0, ub=1.0, name="delta" + dummy_delta_name)
-
-                    list_delta_name.append(dummy_delta_name)
-            else:
-                psi[v, t] = md.addVar(vtype="BINARY", name="psi" + dummy_a_name)
-
-    for t in Tau_ext:
-        for v in V_ext:
-            dummy_b_name = "[%d,%d]" % (v, t)
-            list_beta_name.append(dummy_b_name)
-
-            beta[v, t] = md.addVar(vtype="CONTINUOUS", lb=0.0, ub=1.0, name="beta" + dummy_b_name)
-
-            if false_neg:
-                # include 0 for searcher s = 1, s-1 = 0
-                for s_ in [0] + S:
-                    dummy_bs_name = "[%d,%d,%d]" % (s_, v, t)
-                    beta_s[s_, v, t] = md.addVar(vtype="CONTINUOUS", lb=0.0, ub=1.0, name="beta_s" + dummy_bs_name)
-
-    var_for_test.update({'beta': list_beta_name})
-    var_for_test.update({'alpha': list_alpha_name})
-
-    if false_neg:
-        my_vars = {'beta': beta, 'beta_s': beta_s, 'alpha': alpha, 'psi': psi, 'delta': delta}
-        var_for_test.update({'delta': list_delta_name})
-    else:
-        my_vars = {'beta': beta, 'alpha': alpha, 'psi': psi}
-
-    return my_vars, var_for_test
-
-
-def add_searcher_constraints(md, g, my_vars: dict, start: list, vertices_t: dict, deadline: int):
-    """Define constraints pertinent to the searchers path """
-    # get variables
-    X = get_var(my_vars, 'x')
-    Y = get_var(my_vars, 'y')
-
-    S, m = ext.get_set_searchers(start)
-    Tau_ext = ext.get_set_ext_time(deadline)
-
-    # legality of the paths, for all s = {1,...m}
-    for s in S:
-        # 0, 1, 2... T
-        for t in Tau_ext:
-            v_t = vertices_t.get((s, t))
-            # each searcher can only be at one place at each time (including the start vertex), Eq. (1, 7)
-            if t == 0:
-                md.addConstr(X[s, v_t[0], 0] == 1)
-            # md.addConstr(quicksum(X[s, v, t] for v in v_t) == 1)
-
-            for u in v_t:
-                my_next_v = get_next_vertices(g, s, u, t, vertices_t, Tau_ext)
-                my_previous_v = get_previous_vertices(g, s, u, t, vertices_t)
-                if my_next_v is not None:
-                    # (Eq. 9) searcher can only move to: i in delta_prime(v) AND V^tau(t+1)
-                    # sum == 1 if searcher is at u, sum == zero if searcher is not at u (depends on X[s, u, t])
-                    md.addConstr(quicksum(Y[s, u, i, t] for i in my_next_v) == X[s, u, t])
-
-                    if my_previous_v is not None:
-                        # (Eq. 8) searcher can only move to v from j in delta_prime(v) AND V^tau(t-1)
-                        md.addConstr(quicksum(Y[s, i, u, t - 1] for i in my_previous_v) == X[s, u, t])
-                        # md.addConstr(quicksum(Y[s, i, u, t - 1] for i in my_previous_v) ==
-                                     # quicksum(Y[s, u, i, t] for i in my_next_v))
-
-
-def add_capture_constraints(md, g, my_vars: dict, searchers_info: dict, vertices_t, b0: list, M: list, deadline: int):
-    """Define constraints about belief and capture events
-    :param vertices_t:
-    :param md:
-    :param g:
-    :param my_vars:
-    :param searchers_info:
-    :param b0
-    :param deadline
-    """
-
-    # capture-related variables
-    beta = get_var(my_vars, 'beta')
-    alpha = get_var(my_vars, 'alpha')
-    psi = get_var(my_vars, 'psi')
-
-    false_neg, zeta = check_false_negatives(searchers_info)
-
-    # if false negative model, there will exist a delta
-    if false_neg:
-        delta = get_var(my_vars, 'delta')
-        beta_s = get_var(my_vars, 'beta_s')
-    else:
-        delta = {}
-        beta_s = {}
-
-    # searchers position
-    X = get_var(my_vars, 'x')
-
-    # sets
-    V = ext.get_set_vertices(g)[0]
-    S, m = ext.get_set_searchers(searchers_info)
-
-    Tau = ext.get_set_time(deadline)
-    V_ext = ext.get_set_ext_vertices(g)
-
-    # initial belief (user input), t = 0 (Eq. 13)
-    for i in V_ext:
-        md.addConstr(beta[i, 0] == b0[i])
-
-    for t in Tau:
-        # this is a dictionary
-        my_vertices = get_current_vertices(t, vertices_t, S)
-        for v in V:
-            # v_idx = ext.get_python_idx(v)
-            # take Markovian model into account (Eq. 14)
-            # NOTE M matrix is accessed by python indexing
-            md.addConstr(alpha[v, t] == quicksum(M[u - 1][v - 1] * beta[u, t - 1] for u in V))
-
-            # find searchers position that could capture the target while it is in v
-            list_u_capture = get_u_for_capture(searchers_info, V, v)
-            if list_u_capture and my_vertices:
-                if false_neg:
-                    for s in S:
-                        md.addConstr(quicksum(X[s, u, t] for u in filter(lambda x: x in my_vertices[s], list_u_capture)) >= psi[s, v, t])
-                        md.addConstr(quicksum(X[s, u, t] for u in filter(lambda x: x in my_vertices[s], list_u_capture)) <= psi[s, v, t])
-
-                else:
-                    md.addConstr(quicksum(quicksum(X[s, u, t] for u in filter(lambda x: x in my_vertices[s], list_u_capture)) for s in S) >= psi[v, t])
-                    md.addConstr(quicksum(quicksum(X[s, u, t] for u in filter(lambda x: x in my_vertices[s], list_u_capture)) for s in S) <= m * psi[v, t])
-
-            if false_neg:
-                for s in S:
-
-                    # first searcher
-                    if s == S[0]:
-                        md.addConstr(beta_s[0, v, t] == alpha[v, t])
-
-                    # Eq. (38)
-                    md.addConstr(delta[s, v, t] <= 1 - psi[s, v, t])
-                    # Eq. (39)
-                    md.addConstr(delta[s, v, t] <= beta_s[s-1, v, t])
-                    # Eq. (40)
-                    md.addConstr(delta[s, v, t] >= beta_s[s-1, v, t] - psi[s, v, t])
-
-                    # Eq. (37)
-                    md.addConstr(beta_s[s, v, t] == ((1 - zeta) * delta[s, v, t]) + (zeta * beta_s[s-1, v, t]))
-
-                # last searcher
-                md.addConstr(beta[v, t] == beta_s[S[-1], v, t])
-
-            else:
-                # (15)
-                md.addConstr(beta[v, t] <= 1 - psi[v, t])
-                # (16)
-                md.addConstr(beta[v, t] <= alpha[v, t])
-                # (17)
-                md.addConstr(beta[v, t] >= alpha[v, t] - psi[v, t])
-
-        # probability of being intercepted == what is left
-        md.addConstr(beta[0, t] == 1 - quicksum(beta[v, t] for v in V))
-
-
 def get_u_for_capture(searchers_info: dict, V: list,  v: int):
     """Return a list with the searchers vertex u that could capture the target placed at v"""
     my_list = []
@@ -453,17 +194,27 @@ def get_u_for_capture(searchers_info: dict, V: list,  v: int):
     return my_list
 
 
-def get_capture_matrix(searchers_info: dict, s, u):
+def get_capture_matrix(searchers: dict, s, u):
     """get capture matrices from searchers_info"""
-    c_matrices = get_all_capture_matrices(searchers_info, s)
+    c_matrices = get_all_capture_matrices(searchers, s)
     C = c_matrices.get(u)
     return C
 
 
-def get_all_capture_matrices(searchers_info: dict, s):
-    """get capture matrices from searchers_info"""
-    my_aux_dict = searchers_info.get(s)
-    c_matrices = my_aux_dict.get('c_matrix')
+def get_all_capture_matrices(searchers: dict, s_id):
+    """get capture matrices from searchers (s_info or searchers class)"""
+    # get s
+    s = searchers[s_id]
+
+    # TODO take out s_info once code is clean
+    # s_info or searchers
+    if isinstance(s, dict):
+        # old form, extract from s_info
+        c_matrices = s.get('c_matrix')
+    else:
+        # new, extract from class MySearcher
+        c_matrices = s.capture_matrices
+
     return c_matrices
 
 
@@ -476,7 +227,7 @@ def check_capture(C, v):
         return False
 
 
-def check_false_negatives(s_info: dict):
+def check_false_negatives(searchers: dict):
     """Set flag on false negatives for true or false, depending on the elements of C"""
     # default
     false_neg = False
@@ -484,11 +235,147 @@ def check_false_negatives(s_info: dict):
     # get capture matrices from first searcher, first vertex (assume the other will be the same type)
     s = 1
     u = 1
-    C = get_capture_matrix(s_info, s, u)
+    C = get_capture_matrix(searchers, s, u)
 
     # check if it's float
     if C.dtype.type == np.float64:
         false_neg = True
-        zeta = s_info[1]['zeta']
+        # TODO allow for diff zetas!!
+        if isinstance(searchers[1], dict):
+            zeta = searchers[1]['zeta']
+        else:
+            zeta = searchers[1].zeta
 
     return false_neg, zeta
+
+
+# functions from previous aux_classes file
+def product_capture_matrix(searchers: dict, pi_next_t: dict, n: int):
+    """Find and multiply capture matrices for s = 1,...m
+    searchers position needs to be dict with key (s, t)"""
+
+    # number of vertices + 1
+    nu = n + 1
+    C = {}
+    prod_C = np.identity(nu)
+    # get capture matrices for each searcher that will be at pi(t+1)
+    for s in searchers.keys():
+        # get where the searchers is now
+        v = pi_next_t.get(s)
+        # extract the capture matrix for that vertex
+        C[s] = get_capture_matrix(searchers, s, v)
+        # recursive product of capture matrix, from 1...m searchers
+        prod_C = np.matmul(prod_C, C[s])
+
+    return prod_C
+
+
+def assemble_big_matrix(n: int, Mtarget):
+    """Assemble array for belief update equation"""
+
+    if isinstance(Mtarget, list):
+        # transform motion matrix in array
+        M = np.asarray(Mtarget)
+    else:
+        M = Mtarget
+
+    # assemble the array
+    a = np.array([1])
+    b = np.zeros((1, n), dtype=int)
+    c = np.zeros((n, 1), dtype=int)
+    # extended motion array
+    row1 = np.concatenate((a, b), axis=None)
+    row2 = np.concatenate((c, M), axis=1)
+    # my matrix
+    big_M = np.vstack((row1, row2))
+    return big_M
+
+
+def change_type(A, opt: str):
+    """Change from list to array or from array to list"""
+    # change to list
+    if opt == 'list':
+        if not isinstance(A, np.ndarray):
+            B = False
+        else:
+            B = A.tolist()
+    # change to array
+    elif opt == 'array':
+        if not isinstance(A, list):
+            B = False
+        else:
+            B = np.asarray(A)
+    else:
+        print("Wrong type option, array or list only")
+        B = False
+
+    return B
+
+
+def sample_vertex(my_vertices: list, prob_move: list):
+    """ sample 1 vertex with probability weight according to prob_move"""
+    # uncomment for random seed
+    ext.get_random_seed()
+    my_vertex = np.random.choice(my_vertices, None, p=prob_move)
+    return my_vertex
+
+
+def probability_move(M, current_vertex):
+    """get moving probabilities for current vertex"""
+
+    # get current vertex id
+    v_idx = ext.get_python_idx(current_vertex)
+    n = len(M[v_idx])
+    prob_move = []
+    my_vertices = []
+    for col in range(0, n):
+        prob_v = M[v_idx][col]
+        # if target can move to this vertex, save to list
+        if prob_v > 1e-4:
+            prob_move.append(prob_v)
+            my_vertices.append(col + 1)
+
+    return my_vertices, prob_move
+
+
+def belief_update_equation(current_belief: list, big_M: np.ndarray, prod_C: np.ndarray):
+    """Update the belief based on Eq (2) of the model:
+    b(t+1) = b(t) * big_M * Prod_C"""
+
+    # transform into array for multiplication
+    current_b = change_type(current_belief, 'array')
+
+    # use belief update equation
+    dummy_matrix = np.matmul(big_M, prod_C)
+    new_b = np.matmul(current_b, dummy_matrix)
+
+    # transform to list
+    new_belief = change_type(new_b, 'list')
+
+    return new_belief
+
+
+def get_true_position(v_target, idx=None):
+    """return true position of the target based on the initial vertice distribution
+    idx is the index correspondent of the true position of the list v_target"""
+
+    # if there is only one possible vertex, the target is there
+    if len(v_target) == 1:
+        v_target_true = v_target[0]
+    else:
+        # if no index for the true vertex was provided, choose randomly
+        if idx is None:
+            n_vertex = len(v_target)
+            prob_uni = (1/n_vertex)
+            my_array = np.ones(n_vertex)
+            prob_array = prob_uni * my_array
+            prob_move = prob_array.tolist()
+            v_target_true = sample_vertex(v_target, prob_move)
+        # if the index was provided, simply get the position
+        else:
+            if idx >= len(v_target):
+                v_target_true = v_target[-1]
+            else:
+                v_target_true = v_target[idx]
+
+    return v_target_true

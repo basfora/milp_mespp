@@ -1,37 +1,32 @@
-import core.construct_model
-import core.create_parameters
 from core import extract_info as ext
-from core import construct_model as cm
 
 
 class MySearcher:
     """save information related to each searcher, for s=1...m"""
 
-    def __init__(self, searcher_id: int, searchers_info: dict, capture_range=0, m=None, my_seed=None):
+    def __init__(self, searcher_id: int, v0: int, C_all, capture_range=0, zeta=None, my_seed=None):
 
         # INITIAL (sim) -- immutable
 
         # ID for searcher instance, from 1...m
         self.id = searcher_id
 
-        # repeat for all searchers
-        if m is None:
-            m = ext.get_set_searchers(searchers_info)[1]
-        self.m = m
-
         # CAPTURE INFORMATION
         # capture_range
         self.capture_range = capture_range
 
         # get info out of searchers_info with that ID
-        start = searchers_info[self.id]['start']
+        start = v0
         self.start = start
 
         # get capture matrices
-        self.capture_matrices = cm.get_all_capture_matrices(searchers_info, self.id)
+        self.capture_matrices = C_all
 
         # check for false negatives
-        false_neg, zeta = core.construct_model.check_false_negatives(searchers_info)
+        if zeta is not None:
+            false_neg = True
+        else:
+            false_neg = False
         self.false_negative = false_neg
         self.zeta = zeta
 
@@ -76,9 +71,6 @@ class MySearcher:
 
         self.path_planned[current_time] = new_path_planned
         self.init_milp = new_path_planned[0]
-
-
-
 
 
 

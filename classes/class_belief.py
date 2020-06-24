@@ -1,6 +1,5 @@
-
+from core import construct_model as cm
 from core import extract_info as ext
-from core import aux_classes as ac
 
 
 class MyBelief:
@@ -25,8 +24,7 @@ class MyBelief:
         self.milp_init_belief = self.start_belief
         self.new = sim_start_belief
 
-    # change searchers info input after making searchers class (searchers position needs to be (s) = v
-    def update(self, searchers_info: dict, pi_next_t: dict, Mtarget: list, n: int):
+    def update(self, searchers: dict, pi_next_t: dict, Mtarget: list, n: int):
         """Use Eq. (2) to update current belief
         store belief vector based on new belief"""
 
@@ -35,12 +33,12 @@ class MyBelief:
         next_time = current_time + 1
 
         # find the product of the capture matrices, s = 1...m
-        prod_C = ac.product_capture_matrix(searchers_info, pi_next_t, n)
+        prod_C = cm.product_capture_matrix(searchers, pi_next_t, n)
 
         # assemble the matrix for multiplication
-        big_M = ac.assemble_big_matrix(n, Mtarget)
+        big_M = cm.assemble_big_matrix(n, Mtarget)
 
-        new_belief = ac.belief_update_equation(current_belief, big_M, prod_C)
+        new_belief = cm.belief_update_equation(current_belief, big_M, prod_C)
 
         self.stored[next_time] = new_belief
         self.new = new_belief

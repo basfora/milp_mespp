@@ -1,3 +1,4 @@
+import core.construct_model
 from core import create_parameters as cp
 from core.deprecated import pre_made_inputs as pmi
 from core import aux_classes as ac
@@ -14,16 +15,22 @@ from gurobipy import *
 
 
 def run_my_simulator(exp_inputs):
+
     # INITIALIZE
+
+    # make sure Gurobi env is clean
     disposeDefaultEnv()
-
-    belief, target, searchers, solver_data, s_info = my_init_wrapper(exp_inputs)
+    # extract inputs for the problem instance
     timeout = exp_inputs.timeout
-
     g = exp_inputs.graph
+    m = exp_inputs.size_team
+
+    # initialize classes
+    belief, target, searchers, solver_data =  my_init_wrapper(exp_inputs)
+    # -------------------------------------------------------------------------------
+
     deadline, horizon, theta, solver_type, gamma = unpack_from_solver(solver_data)
     M = unpack_from_target(target)
-    m = unpack_from_searchers(searchers)
 
     # get sets for easy iteration
     S, V, Tau, n, m = ext.get_sets_and_ranges(g, m, horizon)
@@ -43,12 +50,8 @@ def run_my_simulator(exp_inputs):
         # check if it's time to re-plan (OBS: it will plan on t = 0)
         if t % theta == 0:
 
-            # update start vertices of the searchers
-            if t is not 0:
-                s_info = update_start_info(s_info, pi_next_t)
-
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(g, horizon, s_info, belief.new, M,
+            obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(g, horizon, searchers, belief.new, M,
                                                                                 gamma, solver_type, timeout)
 
             # save the new data
@@ -72,7 +75,7 @@ def run_my_simulator(exp_inputs):
         searchers = evolve_searchers_position(searchers, pi_next_t)
 
         # update belief
-        belief.update(s_info, pi_next_t, M, n)
+        belief.update(searchers, pi_next_t, M, n)
 
         # update target
         target = evolve_target(target, belief.new)
@@ -118,11 +121,6 @@ def unpack_from_target(target):
     return M
 
 
-def unpack_from_searchers(searchers):
-    m = searchers[1].m
-    return m
-
-
 def my_init_wrapper(exp_inputs):
 
     g = exp_inputs.graph
@@ -165,15 +163,19 @@ def my_init_wrapper(exp_inputs):
             print('Target within range --> target: ' + str(v_target) + 'searcher ' + str(v_searchers))
             my_seed['searcher'] = my_seed['searcher'] + 500
 
-    # initialize parameters ikf everything is ok
+    # initialize parameters if everything is ok
     b0, M, s_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution, capture_range,
                                        zeta)
 
-    # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, solver_data = init_all_classes(horizon, deadline, theta, g, solver_type, b0, s_info,
-                                                              v_target, M, capture_range, my_seed)
+    searchers = cp.create_searchers(g, v_searchers, capture_range, zeta)
 
-    return belief, target, searchers, solver_data, s_info
+    # initialize instances of classes (initial target and searchers locations)
+    belief, target, solver_data = init_all_classes(horizon, deadline, theta, g, solver_type, b0, s_info,
+                                                   v_target, M, capture_range, my_seed)
+
+    print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
+
+    return belief, target, searchers, solver_data
 
 
 def print_capture_details(t, target, searchers, solver_data):
@@ -216,42 +218,43 @@ def load_pickle_file(filename):
     return b
 
 
-def run_solver(g, horizon, searchers_info, b0, M_target, gamma=0.99, opt='central', timeout=30*60, n_inter=1, pre_solve=-1):
+def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, opt='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
     """Run solver according to type of planning specified"""
 
     if opt == 'central':
-        obj_fun, time_sol, gap, x_searchers, b_target, threads = central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout)
+        obj_fun, time_sol, gap, x_searchers, b_target, threads = central_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout)
 
     elif opt == 'distributed':
-        obj_fun, time_sol, gap, x_searchers, b_target, threads = distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout, n_inter, pre_solve)
+        obj_fun, time_sol, gap, x_searchers, b_target, threads = distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout, n_inter, pre_solve)
     else:
         obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.none_model_vars()
 
     return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
-def central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout):
+def central_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout):
     """Add variables, constraints, objective function and solve the model
     compute all paths"""
 
     solver_type = 'central'
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
+    # OK with searchers
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers)
 
     # create model
     md = Model("my_model")
 
     # add variables
-    my_vars = mf.add_variables(md, g, horizon, start, vertices_t, searchers_info)
+    my_vars = mf.add_variables(md, g, horizon, start, vertices_t, searchers)
 
     # add constraints (central algorithm)
-    mf.add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b0, M_target)
+    mf.add_constraints(md, g, my_vars, searchers, vertices_t, horizon, b0, M_target)
 
     # objective function
     mf.set_solver_parameters(md, gamma, horizon, my_vars, timeout)
 
     # solve and save results
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.solve_model(md, searchers_info)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.solve_model(md)
 
     # clean things
     md.reset()
@@ -264,7 +267,7 @@ def central_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout):
     return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
-def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout=5, n_inter=1, pre_solver=-1):
+def distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout=5, n_inter=1, pre_solver=-1):
     """Distributed version of the algorithm """
 
     # parameter to stop iterations
@@ -277,10 +280,10 @@ def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout
     my_counter = 0
 
     # temporary path for the searchers
-    temp_pi = init_temporary_path(searchers_info, horizon)
+    temp_pi = init_temporary_path(searchers, horizon)
 
     # get last searcher number [m]
-    m = ext.get_last_info(searchers_info)[0]
+    m = ext.get_last_info(searchers)[0]
 
     obj_fun_list = {}
     time_sol_list = {}
@@ -288,24 +291,24 @@ def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout
 
     while True:
 
-        for s_id in searchers_info.keys():
+        for s_id in searchers.keys():
             # create model
             md = Model("my_model")
 
             temp_pi['current_searcher'] = s_id
 
-            start, vertices_t, times_v = cm.get_vertices_and_steps_distributed(g, horizon, searchers_info, temp_pi)
+            start, vertices_t, times_v = cm.get_vertices_and_steps_distributed(g, horizon, searchers, temp_pi)
 
             # add variables
-            my_vars = mf.add_variables(md, g, horizon, start, vertices_t, searchers_info)
+            my_vars = mf.add_variables(md, g, horizon, start, vertices_t, searchers)
 
-            mf.add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b0, M_target)
+            mf.add_constraints(md, g, my_vars, searchers, vertices_t, horizon, b0, M_target)
 
             # objective function
             mf.set_solver_parameters(md, gamma, horizon, my_vars, timeout, pre_solver)
 
             # solve and save results
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.solve_model(md, searchers_info)
+            obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.solve_model(md)
 
             if md.SolCount == 0:
                 # problem was infeasible or other error (no solution found)
@@ -320,14 +323,12 @@ def distributed_wrapper(g, horizon, searchers_info, b0, M_target, gamma, timeout
                 x_searchers = keep_all_still(temp_pi)
 
             # clean things
-                # clean things
             md.reset()
             md.terminate()
             disposeDefaultEnv()
             del md
 
             # ------------------------------------------------------
-
             # append to the list
             obj_fun_list[s_id] = obj_fun
             time_sol_list[s_id] = time_sol
@@ -470,19 +471,20 @@ def init_all_classes(horizon: int, deadline: int, theta: int, g, solver_type: st
         my_s_seed, my_t_seed = None, None
 
     # target
-    v_target_true = ac.get_true_position(v_possible_target, idx_true_target)
+    v_target_true = cm.get_true_position(v_possible_target, idx_true_target)
     target = MyTarget(v_possible_target, motion_matrix_target, v_target_true, my_t_seed)
 
     m = len(searchers_info.keys())
 
-    # searchers
+    return belief, target, sim_data
+
+
+def init_searchers(searchers_info, capture_range, m, my_s_seed=None):
     searchers = {}
     for s_id in searchers_info.keys():
         searcher = MySearcher(s_id, searchers_info, capture_range, m, my_s_seed)
         searchers[s_id] = searcher
-
-    print('Start target: %d, searcher: %d ' % (v_target_true, searchers[1].start))
-    return belief, target, searchers, sim_data
+    return searchers
 
 
 def update_start_info(searcher_info: dict, current_position: dict):
@@ -745,7 +747,8 @@ def run_simulator_module(g, plan_input: dict, searcher_input: dict, target_input
 
     deadline, horizon, theta, solver_type, gamma = unpack_from_solver(solver_data)
     M = unpack_from_target(target)
-    m = unpack_from_searchers(searchers)
+
+    m = searcher_input['size_team']
 
     # get sets for easy iteration
     S, V, Tau, n, m = ext.get_sets_and_ranges(g, m, horizon)

@@ -1,4 +1,3 @@
-# import core.construct_model
 from core import construct_model as cm
 from core import create_parameters as cp
 from core.deprecated import pre_made_inputs as pmi
@@ -42,8 +41,10 @@ def output_inputs():
     theta = 3
 
     # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info,
+    belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info,
                                                               v0_target, M)
+
+    searchers = cp.create_searchers(g, v0_searchers)
 
     return belief, target, searchers, sim_data, b_0, M, searchers_info
 
@@ -63,10 +64,10 @@ def test_init_all_classes():
 
     # initialize parameters according to inputs
     b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
+    searchers = cp.create_searchers(g, v0_searchers)
 
     # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info,
-                                                              v0_target, M)
+    belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info, v0_target, M)
 
     assert belief.stored[0] == b_0
     assert belief.milp_init_belief == b_0
@@ -85,8 +86,7 @@ def test_init_all_classes():
         assert s.id == s_id
         assert s.start == searchers_info[s_id]['start']
         assert s.start in set(v0_searchers)
-
-        assert s.capture_matrices == searchers_info[s_id]['c_matrix']
+        assert all(s.capture_matrices) == all(searchers_info[s_id]['c_matrix'])
         assert len(s.path_planned) == 0
         assert s.path_taken[0] == searchers_info[s_id]['start']
         counter_s = counter_s + 1
@@ -129,7 +129,7 @@ def test_run_solver_get_model_data():
 
     # solve manually
     results, md1 = mf.run_gurobi(g, "dummy_name", horizon, searchers_info, b_0, M)
-    x, b = ar.query_variables(md1, searchers_info)
+    x, b = ar.query_variables(md1)
     obj_fun1, time_sol1, gap1, threads1 = mf.get_model_data(md1)
 
     assert x == x_searchers
@@ -166,8 +166,10 @@ def test_get_positions_searchers():
     b_0, M, s_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
 
     # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, sim_data = sf.init_all_classes(horizon, deadline, theta, g, 'central', b_0, s_info,
-                                                              v0_target, M)
+    belief, target, sim_data = sf.init_all_classes(horizon, deadline, theta, g, 'central', b_0, s_info,
+                                                   v0_target, M)
+
+    searchers = cp.create_searchers(g, v0_searchers)
 
     obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(g, horizon, s_info, b_0, M)
 
@@ -225,8 +227,10 @@ def test_time_consistency():
     b_0, M, s_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
 
     # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, sim_data = sf.init_all_classes(horizon, deadline, theta, g, solver_type, b_0,  s_info,
-                                                              v0_target, M)
+    belief, target, sim_data = sf.init_all_classes(horizon, deadline, theta, g, solver_type, b_0,  s_info,
+                                                   v0_target, M)
+
+    searchers = cp.create_searchers(g, v0_searchers)
 
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0

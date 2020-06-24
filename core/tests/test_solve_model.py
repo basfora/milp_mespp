@@ -39,7 +39,7 @@ def test_position_searchers():
     # Optimize model
     md.optimize()
 
-    x_s, b_target = ar.query_variables(md, searchers_info)
+    x_s, b_target = ar.query_variables(md)
 
     # check searcher position (1)
     assert x_s.get((1, 1, 0)) == 1

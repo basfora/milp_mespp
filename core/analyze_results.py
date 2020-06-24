@@ -7,11 +7,11 @@ from core import sim_fun as sf
 
 def show_me_results(md, g, name_folder: str, searchers_info: dict, deadline: int):
 
-    x_searchers, b_target = query_variables(md, searchers_info)
+    x_searchers, b_target = query_variables(md)
     plot_all_steps(g, name_folder, x_searchers, b_target, deadline)
 
 
-def query_variables(md, searchers_info=None):
+def query_variables(md):
     """query variable X to get the optimal path
     query variable beta to get target belief
     return variables values as dictionaries
