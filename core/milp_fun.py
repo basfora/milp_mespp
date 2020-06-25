@@ -18,6 +18,12 @@ from core import construct_model as cm
 from gurobipy import *
 
 
+def create_model():
+    disposeDefaultEnv()
+    md = Model("my_model")
+
+    return md
+
 def add_constraints(md, g, my_vars: dict, searchers: dict, vertices_t: dict, deadline: int, b0: list, M: list):
     """define the model constraints according to given parameters
     searchers constraints: (1) - (4)

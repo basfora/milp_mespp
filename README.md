@@ -60,7 +60,7 @@ sudo apt-get install bison flex
 python3 -m pip install python-igraph
 ```
 ### Installing gurobipy
-License and installation instructions [here].(https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
+License and installation instructions [here](https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
 > Important: changing default saving location of license file will cause errors. 
 
 If you are using PyCharm, you might need to also run on PyCharm's terminal:

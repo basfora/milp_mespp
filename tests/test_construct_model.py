@@ -1,6 +1,7 @@
 import pytest
 
 import core.extract_info
+import core.plan_fun
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
@@ -82,7 +83,7 @@ def test_get_vertices_and_steps_distributed():
     # searchers info
     searchers_info = cp.my_searchers_info(g, v0)
 
-    temp_s_path = sf.init_temporary_path(searchers_info, deadline)
+    temp_s_path = core.plan_fun.init_temp_path(searchers_info, deadline)
     temp_s_path['current_searcher'] = 1
 
     start, vertices_t, times_v = cm.get_vertices_and_steps_distributed(g, deadline, searchers_info, temp_s_path)

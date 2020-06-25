@@ -1,4 +1,4 @@
-
+import core.plan_fun
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
@@ -126,7 +126,7 @@ def test_run_solver_get_model_data():
     b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
 
     # solve inside run_solver
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(g, horizon, searchers_info, b_0, M)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, searchers_info, b_0, M)
 
     # solve manually
     results, md1 = mf.run_gurobi(g, horizon, searchers_info, b_0, M, 0.99)
@@ -172,7 +172,7 @@ def test_get_positions_searchers():
 
     searchers = cp.create_searchers(g, v0_searchers)
 
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(g, horizon, s_info, b_0, M)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, s_info, b_0, M)
 
     searchers, s_pos = sf.get_planned_path(x_searchers, V, Tau, searchers)
 
@@ -241,8 +241,8 @@ def test_time_consistency():
     # FIRST ITERATION
 
     # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(g, horizon, s_info, belief.new, M, 1.5,
-                                                                  solver_type)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, s_info, belief.new, M, 1.5,
+                                                                                      solver_type)
     # save the new data
     sim_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, horizon)
 
