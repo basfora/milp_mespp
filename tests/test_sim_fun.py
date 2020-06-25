@@ -174,7 +174,7 @@ def test_get_positions_searchers():
 
     obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, s_info, b_0, M)
 
-    searchers, s_pos = sf.get_planned_path(x_searchers, V, Tau, searchers)
+    searchers, s_pos = core.plan_fun.xs_to_path(x_searchers, V, Tau, searchers)
 
     assert s_pos[1, 0] == 1
     assert s_pos[1, 1] == 3
@@ -247,7 +247,7 @@ def test_time_consistency():
     sim_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, horizon)
 
     # get position of each searcher at each time-step based on x[s][v, t] variable
-    searchers, s_pos_plan = sf.get_planned_path(x_searchers, V, Tau, searchers)
+    searchers, s_pos_plan = core.plan_fun.xs_to_path(x_searchers, V, Tau, searchers)
 
     # reset time-steps of planning
     t_plan = 1

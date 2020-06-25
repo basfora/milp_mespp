@@ -126,7 +126,6 @@ class MyTarget:
 
         self.milp_init_v_true = new_v_true
 
-
-
-
-
+    def unpack(self):
+        M = self.motion_matrix
+        return M

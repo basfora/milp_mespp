@@ -159,7 +159,7 @@ def keep_all_still(temp_pi):
     input: temp_pi(s, t) = v
     output: x_s(s, v, t) = 1"""
 
-    x_searchers = ext.path_to_xs(temp_pi)
+    x_searchers = path_to_xs(temp_pi)
 
     print('Keeping searchers still.')
 
@@ -201,6 +201,63 @@ def update_temp_path(searchers: dict, temp_pi: dict, my_s: int):
             temp_pi[(my_s, t)] = v
 
     return temp_pi
+
+
+def xs_to_path(x_s: dict, V: list, T: list, searchers=None):
+    """Get x variables which are one and save it as the planned path path[s_id, time]: v
+    save planned path in searchers"""
+    s_pi = {}
+
+    m = ext.get_m_from_xs(x_s)
+    S = ext.get_set_searchers(m)[0]
+
+    for s in S:
+        path_planned = []
+        for t in T:
+            for v in V:
+                my_value = x_s.get((s, v, t))
+                if my_value == 1:
+                    s_pi[s, t] = v
+                    path_planned.append(v)
+        if searchers is not None:
+            searchers[s].store_path_planned(path_planned)
+
+    return searchers, s_pi
+
+
+def path_to_xs(path: dict):
+    """Convert from
+    pi(s, t) = v
+    to
+    x_s(s, v, t) = 1"""
+
+    x_searchers = {}
+
+    for k in path.keys():
+
+        # ignore first one (if it's temp_pi)
+        if k == 'current_searcher':
+            continue
+
+        s, t = ext.get_from_tuple_key(k)
+        # get vertex searcher is currently in
+        v = path.get((s, t))
+
+        x_searchers[(s, v, t)] = 1
+
+    return x_searchers
+
+
+def get_all_from_xs(x_s):
+    """Return list of (s, v, t, value) tuples from x_s"""
+
+    my_list = []
+    for k in x_s.keys():
+        s, v, t = ext.get_from_tuple_key(k)
+        value = x_s.get(k)
+        my_list.append((s, v, t, value))
+
+    return my_list
 
 
 # ----------------------------------------------------------------------------
@@ -256,7 +313,7 @@ def run_planner(specs):
 
     belief, target, searchers, solver_data = sf.my_init_wrapper(specs)
 
-    M = sf.unpack_from_target(target)
+    M = target.unpack()
     timeout = specs.timeout
 
     # ------------------------------------------
@@ -274,7 +331,7 @@ def run_planner(specs):
         return None
 
     # get position of each searcher at each time-step based on x[s][v, t] variable
-    searchers, pi_s = sf.get_planned_path(x_searchers, V, Tau, searchers)
+    searchers, pi_s = xs_to_path(x_searchers, V, Tau, searchers)
 
     return belief, target, searchers, solver_data
 

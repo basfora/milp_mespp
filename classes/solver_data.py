@@ -65,3 +65,14 @@ class MySolverData:
         if horizon is None:
             horizon = self.horizon[0]
         self.horizon[t] = horizon
+
+    def unpack(self):
+        deadline = self.deadline
+        horizon = self.horizon[0]
+        theta = self.theta
+        solver_type = self.solver_type
+        gamma = self.gamma
+
+        return deadline, horizon, theta, solver_type, gamma
+
+

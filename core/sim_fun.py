@@ -29,8 +29,8 @@ def run_my_simulator(exp_inputs):
     belief, target, searchers, solver_data = my_init_wrapper(exp_inputs)
     # -------------------------------------------------------------------------------
 
-    deadline, horizon, theta, solver_type, gamma = unpack_from_solver(solver_data)
-    M = unpack_from_target(target)
+    deadline, horizon, theta, solver_type, gamma = solver_data.unpack()
+    M = target.unpack()
 
     # get sets for easy iteration
     S, V, Tau, n, m = ext.get_sets_and_ranges(g, m, horizon)
@@ -62,7 +62,7 @@ def run_my_simulator(exp_inputs):
                 break
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.xs_to_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
@@ -103,22 +103,6 @@ def run_my_simulator(exp_inputs):
 #
 #
 # auxiliary functions
-
-
-def unpack_from_solver(solver_data):
-
-    deadline = solver_data.deadline
-    horizon = solver_data.horizon[0]
-    theta = solver_data.theta
-    solver_type = solver_data.solver_type
-    gamma = 0.99
-
-    return deadline, horizon, theta, solver_type, gamma
-
-
-def unpack_from_target(target):
-    M =target.motion_matrix
-    return M
 
 
 def my_init_wrapper(exp_inputs):
@@ -216,27 +200,6 @@ def load_pickle_file(filename):
     with open(filename, 'rb') as handle:
         b = pickle.load(handle)
     return b
-
-
-def get_planned_path(x_s: dict, V: list, T: list, searchers=None):
-    """Get x variables which are one and save it as {(s_id, time): v}"""
-    s_pi = {}
-
-    m = ext.get_m_from_xs(x_s)
-    S = ext.get_set_searchers(m)[0]
-
-    for s in S:
-        path_planned = []
-        for t in T:
-            for v in V:
-                my_value = x_s.get((s, v, t))
-                if my_value == 1:
-                    s_pi[s, t] = v
-                    path_planned.append(v)
-        if searchers is not None:
-            searchers[s].store_path_planned(path_planned)
-
-    return searchers, s_pi
 
 
 def check_for_capture(searchers, target):
@@ -382,8 +345,8 @@ def run_simulator_pmi(sim_param=1, inputs_opt=1, gamma=0.99, name_folder=None, s
     b_0, M, s_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
 
     # initialize instances of classes (initial target and searchers locations)
-    belief, target, searchers, solver_data = init_all_classes(horizon, deadline, theta, g, solver_type, b_0,  s_info,
-                                                              v0_target, M, capture_range)
+    belief, target, solver_data = init_all_classes(horizon, deadline, theta, g, solver_type, b_0,  s_info,
+                                                   v0_target, M, capture_range)
 
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0
@@ -403,7 +366,7 @@ def run_simulator_pmi(sim_param=1, inputs_opt=1, gamma=0.99, name_folder=None, s
                 s_info = update_start_info(s_info, pi_next_t)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(g, horizon, s_info, belief.new, M, gamma,
+            obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, s_info, belief.new, M, gamma,
                                                                                 solver_type)
 
             # break here if the problem was infeasible
@@ -414,7 +377,7 @@ def run_simulator_pmi(sim_param=1, inputs_opt=1, gamma=0.99, name_folder=None, s
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
@@ -495,7 +458,7 @@ def run_simulator_root(g, m, deadline, theta=None, horizon=None, solver_type='ce
                 s_info = update_start_info(s_info, pi_next_t)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(g, horizon, s_info, belief.new, M,
+            obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, s_info, belief.new, M,
                                                                                 gamma, solver_type)
 
             # break here if the problem was infeasible
@@ -506,7 +469,7 @@ def run_simulator_root(g, m, deadline, theta=None, horizon=None, solver_type='ce
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
@@ -554,8 +517,8 @@ def run_simulator_module(g, plan_input: dict, searcher_input: dict, target_input
     belief, target, searchers, solver_data, s_info = init_wrapper_mod(g, plan_input, searcher_input,
                                                                       target_input, belief_input)
 
-    deadline, horizon, theta, solver_type, gamma = unpack_from_solver(solver_data)
-    M = unpack_from_target(target)
+    deadline, horizon, theta, solver_type, gamma = solver_data.unpack()
+    M = target.unpack()
 
     m = searcher_input['size_team']
 
@@ -580,7 +543,7 @@ def run_simulator_module(g, plan_input: dict, searcher_input: dict, target_input
                 s_info = update_start_info(s_info, pi_next_t)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(g, horizon, s_info, belief.new, M,
+            obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, s_info, belief.new, M,
                                                                                 gamma, solver_type)
 
             # break here if the problem was infeasible
@@ -591,7 +554,7 @@ def run_simulator_module(g, plan_input: dict, searcher_input: dict, target_input
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1

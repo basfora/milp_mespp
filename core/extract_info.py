@@ -785,40 +785,6 @@ def convert_list_array(A, opt: str):
     return B
 
 
-def path_to_xs(path: dict):
-    """Convert from pi(s, t) = v
-    to
-    x_s(s, v, t) = 1"""
-
-    x_searchers = {}
-
-    for k in path.keys():
-
-        # ignore first one (if it's temp_pi)
-        if k == 'current_searcher':
-            continue
-
-        s, t = get_from_tuple_key(k)
-        # get vertex searcher is currently in
-        v = path.get((s, t))
-
-        x_searchers[(s, v, t)] = 1
-
-    return x_searchers
-
-
-def get_all_from_xs(x_s):
-    """Return list of (s, v, t, value) tuples from x_s"""
-
-    my_list = []
-    for k in x_s.keys():
-        s, v, t = get_from_tuple_key(k)
-        value = x_s.get(k)
-        my_list.append((s, v, t, value))
-
-    return my_list
-
-
 def get_from_tuple_key(k):
 
     # x_searchers (s, v, t)
