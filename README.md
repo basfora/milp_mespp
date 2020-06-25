@@ -22,8 +22,8 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
    │   ├── sim_fun		<br />
    │   ├── retrieve_data	<br />
    │   └── plot_fun		<br />
-   ├── data			<br /> 
-   ├── examples			<br /> 
+   ├── data			<br />
+   ├── examples			<br />
    │   ├── plan_only		<br />
    │   └── numerical_sim	<br />
    ├── graphs			<br />
