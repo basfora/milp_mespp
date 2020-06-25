@@ -1,7 +1,7 @@
 """Create parameters for the problem instance"""
 
 from core import extract_info as ext
-from classes.class_searcher import MySearcher
+from classes.searcher import MySearcher
 # external packages
 from igraph import *
 import numpy as np

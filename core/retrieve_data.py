@@ -10,7 +10,7 @@ import numpy as np
 this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(this_path)
 
-from classes.class_belief import MyBelief
+from classes.belief import MyBelief
 from core import extract_info as ext
 from experiments import plot_gen_simple as pg
 

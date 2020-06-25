@@ -11,7 +11,7 @@ sys.path.append(this_path)
 
 # import relevant modules
 from core import sim_fun as sf
-from classes.class_inputs import MyInputs
+from classes.inputs import MyInputs
 # end of header
 # ---------------------------------------------------------------------------------------------------------------------
 

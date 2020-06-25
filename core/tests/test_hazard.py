@@ -1,5 +1,5 @@
 from core import extract_info as ext
-from classes.class_hazard import MyHazard
+from classes.hazard import MyHazard
 import numpy as np
 
 

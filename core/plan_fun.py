@@ -2,7 +2,7 @@ import numpy as np
 from core import extract_info as ext
 from core import sim_fun as sf
 from core import retrieve_data as rd
-from classes.class_inputs import MyInputs
+from classes.inputs import MyInputs
 from gurobipy import *
 
 

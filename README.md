@@ -4,24 +4,30 @@ MILP models for the Multi-robot Efficient Search Path Planning (MESPP) problem: 
 Supports multiple searchers, arbitrary capture ranges, and false negatives simultaneously.
 
 
-## Project Structure
+## Code Structure
 
-milp_mespp 				<br />
-	|  				<br />
-	|--- core			<br />
-		|--- extract_info	<br />
-		|--- create_parameters	<br />
-		|--- construct_model	<br />
-		|--- milp_fun		<br />
-		|--- plan_fun		<br />
-		|--- sim_fun		<br />
-		|--- retrieve_data	<br />
-		|--- plot_fun		<br />
-	|--- data			<br />
-	|--- graphs			<br />
-	|--- examples			<br />
-		|--- plan_only		<br />
-		|--- numerical_sim	<br />
+   milp_mespp			<br />
+   ├── classes			<br />
+   │   ├── belief		<br />
+   │   ├── inputs		<br />
+   │   ├── searcher		<br />
+   │   ├── solver_data		<br />
+   │   └── target		<br />
+   ├── core			<br />
+   │   ├── extract_info		<br />
+   │   ├── create_parameters	<br />
+   │   ├── construct_model	<br />
+   │   ├── milp_fun		<br />
+   │   ├── plan_fun		<br />
+   │   ├── sim_fun		<br />
+   │   ├── retrieve_data	<br />
+   │   └── plot_fun		<br />
+   ├── data			<br />    
+   ├── examples			<br />
+   │   ├── plan_only		<br />
+   │   └── numerical_sim	<br />
+   ├── graphs			<br />
+   └── tests			<br />
 
 
 ## Installation Guide
@@ -55,7 +61,7 @@ python3 -m pip install python-igraph
 ```
 ### Installing gurobipy
 License and installation instructions [here].(https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
-Important: changing default saving location of license file will cause errors. 
+> Important: changing default saving location of license file will cause errors. 
 
 If you are using PyCharm, you might need to also run on PyCharm's terminal:
 ```

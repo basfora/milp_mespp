@@ -1,9 +1,9 @@
 from setuptools import setup  # , find_packages
 
-setup(name='core',
+setup(name='milp_mespp',
       version='0.0.0',
       url='https://github.com/basfora/milp_mespp.git',
-      author='Beatriz Asfora',
+      author='Beatriz A. Asfora',
       author_email='beatriz.asfora@gmail.com',
-      packages=['core', 'classes'],
+      packages=['core', 'classes', 'tests'],
 )

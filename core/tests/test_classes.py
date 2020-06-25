@@ -4,10 +4,10 @@ from core import construct_model as cm
 from core import create_parameters as cp
 from core import milp_fun as mf
 import numpy as np
-from classes.class_belief import MyBelief
-from classes.class_target import MyTarget
-from classes.class_searcher import MySearcher
-from classes.class_solverData import MySolverData
+from classes.belief import MyBelief
+from classes.target import MyTarget
+from classes.searcher import MySearcher
+from classes.solver_data import MySolverData
 from gurobipy import *
 
 

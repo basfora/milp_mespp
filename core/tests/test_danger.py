@@ -1,5 +1,5 @@
 from core import extract_info as ext
-from classes.class_danger import MyDanger
+from classes.danger import MyDanger
 
 
 def get_param():
