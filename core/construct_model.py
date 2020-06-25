@@ -1,12 +1,12 @@
-"""Functions for model construction:
+"""Construct MILP model
+Functions:
  - Searchers' motion: get vertices for each time step: V(s, t), get previous, current, next vertices
  - Capture events: matrices and checks
  - Target motion: probability matrix, get true starting position
  - Belief: update equation
  - """
-
-import numpy as np
 from core import extract_info as ext
+import numpy as np
 
 
 # V(s,t)

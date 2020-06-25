@@ -520,18 +520,15 @@ def plot_and_show_sim_results(belief, target, searchers, sim_data, folder_name):
         mount_sim_frame(s_file, tgt_file, folder_path, b0, t, capture_info)
 
     # get until multiRobotTargetSearch/data/name_folder
-    print("Composing video")
     # compose short video
-    pf.compose_video(folder_path)
-    print("Video is done")
-    pf.delete_frames(folder_path)
-    print("Frames were deleted")
+    compose_video(folder_path)
+    delete_frames(folder_path)
     return
 
 
 def plot_sim_results(belief, target, searchers, sim_data, folder_name):
     """Get information of the simulation from the classes
-    turn into short video"""
+    assemble into frames for each time step"""
 
     g, my_layout = retrieve_graph(sim_data)
 
@@ -561,10 +558,7 @@ def plot_sim_results(belief, target, searchers, sim_data, folder_name):
         s_file = plot_searchers_and_target(g, folder_path, my_layout, target, searchers, t)
         # assemble it nicely
         mount_sim_frame(s_file, tgt_file, folder_path, b0, t, capture_info, 1)
-
     delete_frames(folder_path, 'G')
-    print("Frames were deleted")
-
     return
 
 

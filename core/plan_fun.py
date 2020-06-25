@@ -5,6 +5,7 @@ from core import retrieve_data as rd
 from classes.class_inputs import MyInputs
 from gurobipy import *
 
+
 def initialize_planner(my_graph, my_h):
     """Initialize the planner the pre-set parameters
     If needed, change parameters here"""

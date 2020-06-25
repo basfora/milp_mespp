@@ -1,16 +1,16 @@
 """Create parameters for the problem instance"""
 
+from core import extract_info as ext
+from classes.class_searcher import MySearcher
+# external packages
 from igraph import *
 import numpy as np
 import pickle
 import random
-from core import extract_info as ext
-from classes.class_searcher import MySearcher
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 # instance parameters (searchers, target)
-
 def my_target_motion(g, init_vertex: list,  init_prob='uniform',  motion_rule='random'):
     """Create target motion model matrix and initial belief:
     g is the graph
@@ -338,7 +338,6 @@ def random_init_pos(g, m: int, init_pos=1, my_seed=None):
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Create graphs
-
 def my_graph(number_vertex: int, ref: str, graph_opt=1, deadline=None, w=None, h=None):
     """Function to create graph according to user inputs"""
     # Graph representing environment
