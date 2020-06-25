@@ -6,23 +6,23 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
 
 ## Project Structure
 
-milp_mespp 				<br />
-	|  				<br />
-	|--- core			<br />
-		|--- extract_info	<br />
-		|--- create_parameters	<br />
-		|--- construct_model	<br />
-		|--- milp_fun		<br />
-		|--- plan_fun		<br />
-		|--- sim_fun		<br />
-		|--- retrieve_data	<br />
-		|--- plot_fun		<br />
-	|--- data			<br />
-	|--- graphs			<br />
-	|--- examples			<br />
-		|--- plan_only		<br />
-		|--- numerical_sim	<br />
-
+ milp_mespp   <br />
+   ├── core   <br />
+   │   ├── extract_info  <br />
+   │   ├── create_parameters  <br />
+   │   ├── construct_model  <br />
+   │   ├── milp_fun  
+   │   ├── plan_fun  
+   │   ├── sim_fun  
+   │   ├── retrieve_data  
+   │   └── plot_fun  
+   │
+   ├── graphs
+   ├── data
+   └── examples
+       ├── plan_only
+       └── numerical_sim
+   
 
 ## Installation Guide
 
@@ -55,7 +55,7 @@ python3 -m pip install python-igraph
 ```
 ### Installing gurobipy
 License and installation instructions [here].(https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
-Important: changing default saving location of license file will cause errors. 
+> Important: changing default saving location of license file will cause errors. 
 
 If you are using PyCharm, you might need to also run on PyCharm's terminal:
 ```
@@ -72,7 +72,7 @@ sudo python3 setup.py install
 Beatriz Asfora
 
 ## Acknowledgements
-Dr. Jacobo Banfi <br />
+Dr. Jacobo Banfi @github/jacoban <br />
 Prof. Mark Campbell
 
 
