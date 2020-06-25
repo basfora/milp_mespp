@@ -1,3 +1,4 @@
+import core.extract_info
 from core import construct_model as cm
 from core import extract_info as ext
 
@@ -86,7 +87,7 @@ class MyTarget:
         my_vertices, prob_move = cm.probability_move(M, current_vertex)
 
         # sample 1 vertex with probability weight according to prob_move
-        new_vertex = cm.sample_vertex(my_vertices, prob_move)
+        new_vertex = core.extract_info.sample_vertex(my_vertices, prob_move)
 
         # update true position
         self.stored_v_true[next_time] = new_vertex

@@ -1,15 +1,9 @@
-# start of header
-# add module to python path
-import sys
-import os
 import numpy as np
-this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(this_path)
 from core import extract_info as ext
 from core import sim_fun as sf
 from core import retrieve_data as rd
 from classes.class_inputs import MyInputs
-
+from gurobipy import *
 
 def initialize_planner(my_graph, my_h):
     """Initialize the planner the pre-set parameters
@@ -62,14 +56,14 @@ def run_planner(specs):
     # get sets for easy iteration
     S, V, Tau, n, m = ext.get_sets_and_ranges(specs.graph, specs.size_team, specs.horizon)
 
-    belief, target, searchers, solver_data, s_info = sf.my_init_wrapper(specs)
+    belief, target, searchers, solver_data = sf.my_init_wrapper(specs)
 
     M = sf.unpack_from_target(target)
     timeout = specs.timeout
 
     # ------------------------------------------
     # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(specs.graph, specs.horizon, s_info,
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(specs.graph, specs.horizon, searchers,
                                                                            belief.new, M, specs.gamma,
                                                                            specs.solver_type, timeout)
 

@@ -1,4 +1,17 @@
-# useful functions used throughout project
+"""Basic functions used throughout the project:
+ - get sets
+ - get indexes
+ - get labels
+ - get labels
+ - get last
+ - names according to notation code
+ - extract data
+ - sampling from distributions
+ - graph related info
+ - retrieve specific graphs
+ - convert data format
+"""
+
 import datetime
 import os
 import pickle
@@ -9,7 +22,6 @@ import numpy as np
 # --------------------
 # get sets
 # --------------------
-
 def get_set_searchers(info_input):
     """Return set of searchers,
      S = {1,...m}"""
@@ -183,8 +195,6 @@ def get_idx_dummy_goal(vertex_input):
 # ---------------------
 # get labels
 # ---------------------
-
-
 def get_label_name(i):
     """Return label idx for python array, list etc"""
     if isinstance(i, list):
@@ -499,20 +509,80 @@ def name_pickle_file(name_folder: str):
     return filename
 
 
+def create_my_folder(today_run=0):
+    """Create directory if it doesnt exist, return the name of the directory (not the path)"""
+
+    name_folder, whole_path = get_name_folder(today_run)
+
+    print(whole_path)
+    # create new folder to save figures
+    if not os.path.exists(whole_path):
+        os.mkdir(whole_path)
+    else:
+        print("Directory " + name_folder + " already exists")
+    return name_folder
+
+
+def create_my_new_folder(m_searcher, g, today_run=0, solver_type='central', zeta=None, capture_range=0,
+                         horizon=None, day_start=None):
+
+    name_folder, whole_path = get_name_code_folder(today_run, m_searcher, g, solver_type, zeta, capture_range,
+                                                       horizon, day_start)
+
+    # print(whole_path)
+    # create new folder to save figures
+    if not os.path.exists(whole_path):
+        os.mkdir(whole_path)
+    else:
+        print("Directory " + name_folder + " already exists")
+    return name_folder
+
+
+def create_my_folder_mod(g, solver_input, searcher_input, day_start, today_run):
+
+    # unpack things
+    horizon = solver_input['horizon']
+    solver_type = solver_input['solver_type']
+
+    capture_range = searcher_input['capture_range']
+    m = searcher_input['size_team']
+    zeta = searcher_input['zeta']
+
+    # create name with code
+    name_folder, whole_path = get_name_code_folder(today_run, m, g, solver_type, zeta, capture_range, horizon,
+                                                       day_start)
+
+    # print(whole_path)
+    # create new folder to save figures
+    if not os.path.exists(whole_path):
+        os.mkdir(whole_path)
+    else:
+        print("Directory " + name_folder + " already exists")
+    return name_folder
+
+
 # -------------------------------------
 # extract data
 # -------------------------------------
-
 def get_pickle_file(path_folder: str, name_pickle='global_save.txt'):
 
     pickle_file = path_folder + "/" + name_pickle
     return pickle_file
 
 
+def find_captor(searchers):
+
+    for s_id in searchers.keys():
+        s = searchers[s_id]
+        if s.catcher is True:
+            return s_id
+
+    return None
+
+
 # -------------------------------------
 # sampling from distributions
 # -------------------------------------
-
 def get_sample_normal(n: int, mu, sigma):
     """Get n samples from the diosxtribution x ~N(mu, sigma)"""
     samples = np.random.normal(mu, sigma, n)
@@ -533,6 +603,14 @@ def get_np_random_seed():
     np.random.seed(my_seed2)
 
     return
+
+
+def sample_vertex(my_vertices: list, prob_move: list):
+    """ sample 1 vertex with probability weight according to prob_move"""
+    # uncomment for random seed
+    get_random_seed()
+    my_vertex = np.random.choice(my_vertices, None, p=prob_move)
+    return my_vertex
 
 
 # --------------------------------------
@@ -590,10 +668,20 @@ def get_node_distance(g, v1: int, v2: int):
     return distance
 
 
+def retrieve_graph(sim_data):
+    # graph file and layout
+    g = sim_data.g
+    if 'grid' in g['name']:
+        my_layout = g.layout("grid")
+    else:
+        my_layout = g.layout("kk")
+
+    return g, my_layout
+
+
 # -----------------------
 # retrieve specific graphs
 # -----------------------
-
 def get_graph(graph_name):
     """Return graph, input can be string with the file name (reuse previous created graph),
      or a variable containing the graph itself"""
@@ -676,6 +764,26 @@ def get_graph_07():
 # -----------------------
 # convert data format
 # -----------------------
+def convert_list_array(A, opt: str):
+    """Change from list to array or from array to list"""
+    # change to list
+    if opt == 'list':
+        if not isinstance(A, np.ndarray):
+            B = False
+        else:
+            B = A.tolist()
+    # change to array
+    elif opt == 'array':
+        if not isinstance(A, list):
+            B = False
+        else:
+            B = np.asarray(A)
+    else:
+        print("Wrong type option, array or list only")
+        B = False
+
+    return B
+
 
 def path_to_xs(path: dict):
     """Convert from pi(s, t) = v
@@ -787,4 +895,15 @@ def create_dict(my_keys, default_value):
     for k in my_keys:
         my_dict[k] = default_value
     return my_dict
+
+
+def init_dict_variables(n_var: int):
+    """create empty variables pertinent to the model"""
+    # pack things
+    my_vars = []
+    for i in range(0, n_var):
+        my_vars.append({})
+
+    return my_vars
+
 

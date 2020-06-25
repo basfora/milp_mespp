@@ -1,8 +1,8 @@
+import core.milp_fun
 from core import extract_info as ext
 from core import construct_model as cm
 from core import create_parameters as cp
-from core import milp_model_functions as mf
-from core import analyze_results as ar
+from core import milp_fun as mf
 from gurobipy import *
 
 
@@ -39,7 +39,7 @@ def test_position_searchers():
     # Optimize model
     md.optimize()
 
-    x_s, b_target = ar.query_variables(md)
+    x_s, b_target = core.milp_fun.query_variables(md)
 
     # check searcher position (1)
     assert x_s.get((1, 1, 0)) == 1

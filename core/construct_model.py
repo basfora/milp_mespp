@@ -1,17 +1,15 @@
+"""Functions for model construction:
+ - Searchers' motion: get vertices for each time step: V(s, t), get previous, current, next vertices
+ - Capture events: matrices and checks
+ - Target motion: probability matrix, get true starting position
+ - Belief: update equation
+ - """
+
 import numpy as np
 from core import extract_info as ext
 
 
-def init_dict_variables(n_var: int):
-    """create empty variables pertinent to the model"""
-    # pack things
-    my_vars = []
-    for i in range(0, n_var):
-        my_vars.append({})
-
-    return my_vars
-
-
+# V(s,t)
 def get_vertices_and_steps(G, deadline, searchers_info):
     """Extract information from the user provided graph and information on searchers
     For each time step, find which vertices each searcher is allowed to be"""
@@ -133,6 +131,7 @@ def get_vertices_and_steps_distributed(G, deadline, searchers_info, temp_s_path)
     return start, vertices_t, times_v
 
 
+# V(t)
 def get_next_vertices(g, s: int, v: int, t: int, vertices_t: dict, Tau_ext: list):
     """Find possible next vertices according to time
      s, v and t refers to the value of each (not index)"""
@@ -182,6 +181,7 @@ def get_previous_vertices(g, s: int, v: int, t: int, vertices_t: dict):
         return v_t_previous
 
 
+# Capture events: matrices and checks
 def get_u_for_capture(searchers_info: dict, V: list,  v: int):
     """Return a list with the searchers vertex u that could capture the target placed at v"""
     my_list = []
@@ -249,7 +249,6 @@ def check_false_negatives(searchers: dict):
     return false_neg, zeta
 
 
-# functions from previous aux_classes file
 def product_capture_matrix(searchers: dict, pi_next_t: dict, n: int):
     """Find and multiply capture matrices for s = 1,...m
     searchers position needs to be dict with key (s, t)"""
@@ -270,6 +269,7 @@ def product_capture_matrix(searchers: dict, pi_next_t: dict, n: int):
     return prod_C
 
 
+# target motion
 def assemble_big_matrix(n: int, Mtarget):
     """Assemble array for belief update equation"""
 
@@ -291,35 +291,6 @@ def assemble_big_matrix(n: int, Mtarget):
     return big_M
 
 
-def change_type(A, opt: str):
-    """Change from list to array or from array to list"""
-    # change to list
-    if opt == 'list':
-        if not isinstance(A, np.ndarray):
-            B = False
-        else:
-            B = A.tolist()
-    # change to array
-    elif opt == 'array':
-        if not isinstance(A, list):
-            B = False
-        else:
-            B = np.asarray(A)
-    else:
-        print("Wrong type option, array or list only")
-        B = False
-
-    return B
-
-
-def sample_vertex(my_vertices: list, prob_move: list):
-    """ sample 1 vertex with probability weight according to prob_move"""
-    # uncomment for random seed
-    ext.get_random_seed()
-    my_vertex = np.random.choice(my_vertices, None, p=prob_move)
-    return my_vertex
-
-
 def probability_move(M, current_vertex):
     """get moving probabilities for current vertex"""
 
@@ -338,24 +309,7 @@ def probability_move(M, current_vertex):
     return my_vertices, prob_move
 
 
-def belief_update_equation(current_belief: list, big_M: np.ndarray, prod_C: np.ndarray):
-    """Update the belief based on Eq (2) of the model:
-    b(t+1) = b(t) * big_M * Prod_C"""
-
-    # transform into array for multiplication
-    current_b = change_type(current_belief, 'array')
-
-    # use belief update equation
-    dummy_matrix = np.matmul(big_M, prod_C)
-    new_b = np.matmul(current_b, dummy_matrix)
-
-    # transform to list
-    new_belief = change_type(new_b, 'list')
-
-    return new_belief
-
-
-def get_true_position(v_target, idx=None):
+def get_target_true_position(v_target, idx=None):
     """return true position of the target based on the initial vertice distribution
     idx is the index correspondent of the true position of the list v_target"""
 
@@ -370,7 +324,7 @@ def get_true_position(v_target, idx=None):
             my_array = np.ones(n_vertex)
             prob_array = prob_uni * my_array
             prob_move = prob_array.tolist()
-            v_target_true = sample_vertex(v_target, prob_move)
+            v_target_true = ext.sample_vertex(v_target, prob_move)
         # if the index was provided, simply get the position
         else:
             if idx >= len(v_target):
@@ -379,3 +333,23 @@ def get_true_position(v_target, idx=None):
                 v_target_true = v_target[idx]
 
     return v_target_true
+
+
+# belief
+def belief_update_equation(current_belief: list, big_M: np.ndarray, prod_C: np.ndarray):
+    """Update the belief based on Eq (2) of the model:
+    b(t+1) = b(t) * big_M * Prod_C"""
+
+    # transform into array for multiplication
+    current_b = ext.convert_list_array(current_belief, 'array')
+
+    # use belief update equation
+    dummy_matrix = np.matmul(big_M, prod_C)
+    new_b = np.matmul(current_b, dummy_matrix)
+
+    # transform to list
+    new_belief = ext.convert_list_array(new_b, 'list')
+
+    return new_belief
+
+

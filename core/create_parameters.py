@@ -1,9 +1,12 @@
+"""Create parameters for the problem instance"""
+
 from igraph import *
 import numpy as np
-from core import extract_info as ext
-from classes.class_searcher import MySearcher
 import pickle
 import random
+from core import extract_info as ext
+from classes.class_searcher import MySearcher
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # instance parameters (searchers, target)
@@ -218,8 +221,6 @@ def searcher_random_pos(v_possible, m: int,  my_seed=None):
 def target_random_pos(g, init_possible=1, my_seed=None):
     """Choose random vertices for the starting point of the target
         positions are given in model indexing (1,2...)"""
-
-
     # get set of vertices
     V, n = ext.get_set_vertices(g)
 

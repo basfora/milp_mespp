@@ -1,7 +1,7 @@
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
-from core import milp_model_functions as mf
+from core import milp_fun as mf
 from gurobipy import *
 
 

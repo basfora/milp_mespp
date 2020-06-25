@@ -1,10 +1,11 @@
+
 from core import construct_model as cm
 from core import create_parameters as cp
-from core.deprecated import pre_made_inputs as pmi
 from core import extract_info as ext
-from core import milp_model_functions as mf
-from core import analyze_results as ar
+from core import milp_fun as mf
 from core import sim_fun as sf
+from gurobipy import *
+from core.deprecated import pre_made_inputs as pmi
 
 
 def parameters_sim():
@@ -128,8 +129,8 @@ def test_run_solver_get_model_data():
     obj_fun, time_sol, gap, x_searchers, b_target, threads = sf.run_solver(g, horizon, searchers_info, b_0, M)
 
     # solve manually
-    results, md1 = mf.run_gurobi(g, "dummy_name", horizon, searchers_info, b_0, M)
-    x, b = ar.query_variables(md1)
+    results, md1 = mf.run_gurobi(g, horizon, searchers_info, b_0, M, 0.99)
+    x, b = mf.query_variables(md1)
     obj_fun1, time_sol1, gap1, threads1 = mf.get_model_data(md1)
 
     assert x == x_searchers

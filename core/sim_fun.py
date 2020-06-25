@@ -1,8 +1,6 @@
-import core.construct_model
 from core import create_parameters as cp
-from core.deprecated import pre_made_inputs as pmi
 from core import extract_info as ext
-from core import milp_model_functions as mf
+from core import milp_fun as mf
 from core import construct_model as cm
 from classes.class_belief import MyBelief
 from classes.class_target import MyTarget
@@ -11,6 +9,7 @@ from classes.class_solverData import MySolverData
 import pickle
 import random
 from gurobipy import *
+from core.deprecated import pre_made_inputs as pmi
 
 
 def run_my_simulator(exp_inputs):
@@ -25,7 +24,7 @@ def run_my_simulator(exp_inputs):
     m = exp_inputs.size_team
 
     # initialize classes
-    belief, target, searchers, solver_data =  my_init_wrapper(exp_inputs)
+    belief, target, searchers, solver_data = my_init_wrapper(exp_inputs)
     # -------------------------------------------------------------------------------
 
     deadline, horizon, theta, solver_type, gamma = unpack_from_solver(solver_data)
@@ -180,7 +179,7 @@ def my_init_wrapper(exp_inputs):
 def print_capture_details(t, target, searchers, solver_data):
     """Print capture details on terminal"""
     print("\nCapture details: \ntime = " + str(t), "\nvertex = " + str(target.capture_v),
-          "\nsearcher = " + str(find_captor(searchers)))
+          "\nsearcher = " + str(ext.find_captor(searchers)))
 
     print("Solving time: ", solver_data.solve_time)
     return
@@ -470,7 +469,7 @@ def init_all_classes(horizon: int, deadline: int, theta: int, g, solver_type: st
         my_s_seed, my_t_seed = None, None
 
     # target
-    v_target_true = cm.get_true_position(v_possible_target, idx_true_target)
+    v_target_true = cm.get_target_true_position(v_possible_target, idx_true_target)
     target = MyTarget(v_possible_target, motion_matrix_target, v_target_true, my_t_seed)
 
     m = len(searchers_info.keys())
@@ -521,16 +520,6 @@ def evolve_target(target, updated_belief: list):
     target.evolve_possible_position(updated_belief)
 
     return target
-
-
-def find_captor(searchers):
-
-    for s_id in searchers.keys():
-        s = searchers[s_id]
-        if s.catcher is True:
-            return s_id
-
-    return None
 
 
 # -------------------------------------------------------------------------------------------------------------------

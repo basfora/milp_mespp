@@ -1,8 +1,8 @@
+import core.milp_fun
 from core import extract_info as ext
 from core import construct_model as cm
 from core import create_parameters as cp
-from core import analyze_results as ar
-from core import milp_model_functions as mf
+from core import milp_fun as mf
 import numpy as np
 from classes.class_belief import MyBelief
 from classes.class_target import MyTarget
@@ -268,7 +268,7 @@ def test_solver_data_class():
     # Optimize model
     md.optimize()
 
-    x_s, b_target = ar.query_variables(md)
+    x_s, b_target = core.milp_fun.query_variables(md)
 
     obj_fun = md.objVal
     gap = md.MIPGap

@@ -1,4 +1,6 @@
 import pytest
+
+import core.extract_info
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
@@ -145,7 +147,7 @@ def test_assemble_big_matrix():
 
     big_M = cm.assemble_big_matrix(n, M)
 
-    bigM = cm.change_type(big_M, 'list')
+    bigM = core.extract_info.convert_list_array(big_M, 'list')
 
     assert isinstance(bigM, list)
     assert bigM[0][0] == 1
@@ -188,7 +190,7 @@ def test_assemble_big_matrix2():
 
     big_M = cm.assemble_big_matrix(n_vertex, M)
 
-    bigM = cm.change_type(big_M, 'list')
+    bigM = core.extract_info.convert_list_array(big_M, 'list')
 
     assert isinstance(bigM, list)
     assert bigM[0][0] == 1
@@ -221,11 +223,11 @@ def test_change_type():
     A1 = np.array([[1, 2], [3, 4]])
     A2 = [1, 2, 3, 4, 5]
 
-    B1 = cm.change_type(A1, 'list')
-    B2 = cm.change_type(A2, 'array')
+    B1 = core.extract_info.convert_list_array(A1, 'list')
+    B2 = core.extract_info.convert_list_array(A2, 'array')
 
-    B3 = cm.change_type(A1, 'array')
-    B4 = cm.change_type(A2, 'list')
+    B3 = core.extract_info.convert_list_array(A1, 'array')
+    B4 = core.extract_info.convert_list_array(A2, 'list')
 
     assert isinstance(B1, list)
     assert isinstance(B2, np.ndarray)
@@ -243,7 +245,7 @@ def test_sample_vertex():
     N = 10000
     i = 0
     while i < N:
-        my_vertex = cm.sample_vertex(my_vertices, prob_move)
+        my_vertex = core.extract_info.sample_vertex(my_vertices, prob_move)
         if my_vertex == 1:
             count1 = count1 + 1
         elif my_vertex == 2:
@@ -342,7 +344,7 @@ def test_belief_update_equation():
 
     new_belief = cm.belief_update_equation(b_0, big_M, prod_C)
 
-    init_belief = cm.change_type(b_0, 'array')
+    init_belief = core.extract_info.convert_list_array(b_0, 'array')
     my_belief = init_belief.dot(big_M).dot(prod_C)
 
     my_belief = my_belief.tolist()
@@ -355,17 +357,17 @@ def test_get_true_position():
 
     # one possible vertex
     v1 = [1]
-    pos1 = cm.get_true_position(v1)
+    pos1 = cm.get_target_true_position(v1)
 
     # more then one vertex, no idx provided
     v2 = [1, 2, 3]
-    pos2 = cm.get_true_position(v2)
-    pos3 = cm.get_true_position(v2)
+    pos2 = cm.get_target_true_position(v2)
+    pos3 = cm.get_target_true_position(v2)
 
     # more then one vertex, idx provided
-    pos4 = cm.get_true_position(v2, 0)
-    pos5 = cm.get_true_position(v2, 1)
-    pos6 = cm.get_true_position(v2, 3)
+    pos4 = cm.get_target_true_position(v2, 0)
+    pos5 = cm.get_target_true_position(v2, 1)
+    pos6 = cm.get_target_true_position(v2, 3)
 
     assert pos1 == v1[0]
     assert pos2 in set(v2)

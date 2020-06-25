@@ -1,41 +1,21 @@
+"""Solver-related functions
+ - add variables
+ - add constraints
+ - set objective function
+ - solve model
+ - retrieve model data
+ - query variables
+
+OBS: s in {1,...m}
+G(V, E), v in {1,...n} but igraph treats as zero
+t in tau = {1,...T}
+capture matrix: first index is zero [0][0], first vertex is [1][1]
+v0 can be {1,...n} --> I convert to python indexing later
+array order: [s, t, v, u]"""
+
 from core import extract_info as ext
 from core import construct_model as cm
-from core import analyze_results as ar
 from gurobipy import *
-
-
-def run_gurobi(graph_file, name_folder: str, horizon: int, searchers_info: dict, b0: list, M_target, gamma=0.99):
-    """Start and run model based on graph_file (map), deadline (number of time steps)"""
-
-    g = ext.get_graph(graph_file)
-
-    # create model
-    md = Model("my_model")
-
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
-
-    # add variables
-    my_vars = add_variables(md, g, horizon, start, vertices_t, )
-
-    # add constraints (central algorithm)
-    add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b0, M_target)
-
-    set_solver_parameters(md, gamma, horizon, my_vars)
-
-    md.update()
-    # Optimize model
-    md.optimize()
-
-    if GRB.Status == 3:
-        print('Optimization problem was infeasible.')
-        return False
-    elif md.Status == 2:
-        # Optimal solution found.
-        return True, md
-    else:
-        print('Unknown error')
-        print(md.GRB.Status)
-        return False
 
 
 def add_constraints(md, g, my_vars: dict, searchers: dict, vertices_t: dict, deadline: int, b0: list, M: list):
@@ -109,14 +89,14 @@ def solve_model(md):
         print('Optimization problem was infeasible.')
     elif md.Status == 2:
         # Optimal solution found.
-        x_searchers, b_target = ar.query_variables(md)
+        x_searchers, b_target = query_variables(md)
         obj_fun, time_sol, gap, threads = get_model_data(md)
     elif md.Status == 9:
         # time limit reached
         print('Time limit reached.')
         if md.SolCount > 0:
             # retrieve the best solution so far
-            x_searchers, b_target = ar.query_variables(md)
+            x_searchers, b_target = query_variables(md)
             obj_fun, time_sol, gap, threads = get_model_data(md)
     else:
         print('Error: ' + str(md.Status))
@@ -157,7 +137,7 @@ def add_searcher_variables(md, g, start: list, vertices_t: dict, deadline: int):
     searchers location at each time step, X
     searchers movement from t to t + 1, Y"""
 
-    [X, Y] = cm.init_dict_variables(2)
+    [X, Y] = ext.init_dict_variables(2)
 
     S, m = ext.get_set_searchers(start)
 
@@ -221,7 +201,7 @@ def add_target_variables(md, g, deadline: int, searchers=None):
     list_alpha_name = []
     list_delta_name = []
 
-    [beta, beta_s, alpha, psi, delta] = cm.init_dict_variables(5)
+    [beta, beta_s, alpha, psi, delta] = ext.init_dict_variables(5)
 
     if searchers is not None:
         false_neg, zeta = cm.check_false_negatives(searchers)
@@ -409,3 +389,177 @@ def get_var(my_vars: dict, name: str):
         var_names = 'x, y, alpha, beta, zeta, psi'
         print('No variable with this name, current model accepts only:' + var_names)
         return None
+
+
+def query_variables(md):
+    """query variable X to get the optimal path
+    query variable beta to get target belief
+    return variables values as dictionaries
+    x_searchers[(s, v, t)], b_target[(v, t)]"""
+
+    # save as dictionaries with searchers as keys
+    x_searchers = {}
+    b_target = {}
+
+    t_max = 0
+
+    for var in md.getVars():
+        my_var_name = var.varName
+        my_var_value = var.x
+        # print('%s %g' % (my_var_name, my_var_value))
+
+        if 'x' in my_var_name:
+            s = int(my_var_name[2:my_var_name.find(",")])
+            v = int(my_var_name[my_var_name.find(",") + 1:my_var_name.rfind(",")])
+            t = int(my_var_name[my_var_name.rfind(",") + 1:-1])
+
+            # print('%s = %f ' % (my_var_name, my_var_value))
+            x_searchers[(s, v, t)] = my_var_value
+
+            if t > t_max:
+                t_max = t
+
+        elif 'beta' in my_var_name and '_s' not in my_var_name:
+            # print('%s %g' % (my_var_name, my_var_value))
+            # remember b[0] is probability of capture
+            v = int(my_var_name[5:my_var_name.find(",")])
+            t = int(my_var_name[my_var_name.find(",") + 1:my_var_name.rfind("]")])
+            b_target[(v, t)] = my_var_value
+
+    # make sure x is binary
+    x_searchers = enforce_binary(x_searchers, t_max)
+    b_target = enforce_sum_1(b_target, t_max)
+
+    # x_searchers[(s, v, t)] and b_target[(v, t)]
+    return x_searchers, b_target
+
+
+def enforce_binary(x_searchers, t_max):
+    """Enforce variable to be binary"""
+
+    old_x_searchers = x_searchers
+
+    m = ext.get_m_from_xs(x_searchers)
+    S = ext.get_set_searchers(m)[0]
+
+    x_keys = old_x_searchers.keys()
+
+    # loop searchers
+    for s in S:
+        # loop through time
+        for t in range(t_max + 1):
+            v_t = [k[1] for k in x_keys if s == k[0] and t == k[2]]
+            var_value = [old_x_searchers.get((s, v, t)) for v in v_t]
+
+            # find max value idx at time t
+            mx = var_value.index(max(var_value))
+
+            # everything else is zero
+            for v in v_t:
+                if v == v_t[mx]:
+                    x_searchers[(s, v, t)] = 1
+                else:
+                    x_searchers[(s, v, t)] = 0
+
+    # for debugging only!
+    if old_x_searchers != x_searchers:
+        print('-X-X-X-X-X-X- Eureka! -X-X-X-X-X-X-')
+
+    return x_searchers
+
+
+def enforce_sum_1(b_target, t_max):
+
+    old_b_target = b_target
+    b_keys = b_target.keys()
+
+    dc = 4
+
+    for t in range(t_max + 1):
+
+        b_values = [round(b_target.get(k), dc) for k in b_keys if t == k[1]]
+        v_t = [k for k in b_keys if t == k[1]]
+
+        my_sum = round(sum(b_values), dc)
+
+        # normalize
+        for i in range(len(b_values)):
+            k = v_t[i]
+            vl = round(b_values[i]/my_sum, dc)
+
+            b_target[k] = vl
+
+    return b_target
+
+
+def query_and_print_variables(md):
+    """query variable X to see the optimal path"""
+
+    # save x variable as dictionary with keys (s, v, t)
+    x_searchers = {}
+    # save beta variable as dictionary with keys (v, t)
+    b_target = {}
+
+    for var in md.getVars():
+        my_var_name = var.varName
+        my_var_value = var.x
+        print('%s %g' % (my_var_name, my_var_value))
+
+        if 'x' in my_var_name:
+            s = int(my_var_name[2])
+            v = int(my_var_name[4])
+            t = int(my_var_name[6])
+
+            if my_var_value >= 0.5:
+                x_searchers[(s, v, t)] = 1
+            else:
+                x_searchers[(s, v, t)] = 0
+
+        elif 'beta' in my_var_name:
+            # print('%s %g' % (my_var_name, my_var_value))
+            # remember b[0] is probability of capture
+            v = int(my_var_name[5])
+            t = int(my_var_name[7])
+            b_target[v, t] = my_var_value
+
+    obj = md.getObjective()
+    print(obj.getValue())
+
+    return x_searchers, b_target
+
+
+# TODO deprecated -- delete (only used for text_sim_fun)
+# model
+def run_gurobi(graph_file, horizon: int, searchers_info: dict, b0: list, M_target, gamma=0.99):
+    """Start and run model based on graph_file (map), deadline (number of time steps)"""
+
+    g = ext.get_graph(graph_file)
+
+    # create model
+    md = Model("my_model")
+
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
+
+    # add variables
+    my_vars = add_variables(md, g, horizon, start, vertices_t, )
+
+    # add constraints (central algorithm)
+    add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b0, M_target)
+
+    set_solver_parameters(md, gamma, horizon, my_vars)
+
+    md.update()
+    # Optimize model
+    md.optimize()
+
+    if GRB.Status == 3:
+        print('Optimization problem was infeasible.')
+        return False
+    elif md.Status == 2:
+        # Optimal solution found.
+        return True, md
+    else:
+        print('Unknown error')
+        print(md.GRB.Status)
+        return False
+
