@@ -12,14 +12,11 @@ import pickle
 import random
 from gurobipy import *
 from core.deprecated import pre_made_inputs as pmi
+from core.plan_fun import searchers_next_position, next_from_path
 
 
 def run_my_simulator(exp_inputs):
 
-    # INITIALIZE
-
-    # make sure Gurobi env is clean
-    disposeDefaultEnv()
     # extract inputs for the problem instance
     timeout = exp_inputs.timeout
     g = exp_inputs.graph
@@ -37,8 +34,8 @@ def run_my_simulator(exp_inputs):
 
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0
-    pi_s = {}
-    pi_next_t = {}
+    path = {}
+    path_next_t = {}
     # _____________________
 
     # begin simulation loop
@@ -47,12 +44,12 @@ def run_my_simulator(exp_inputs):
         print('--\nTime step %d \n--' % t)
 
         # _________________
-        # check if it's time to re-plan (OBS: it will plan on t = 0)
         if t % theta == 0:
+            # check if it's time to re-plan (OBS: it will plan on t = 0)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
             obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new, M,
-                                                                                     gamma, solver_type, timeout)
+                                                                                    gamma, solver_type, timeout)
 
             # save the new data
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
@@ -61,21 +58,21 @@ def run_my_simulator(exp_inputs):
             if time_sol is None or gap is None or obj_fun is None:
                 break
 
-            # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = pln.xs_to_path(x_searchers, V, Tau, searchers)
+            # get position of each searcher at each time-step based on x[s, v, t] variable
+            searchers, path = pln.update_plan(searchers, x_searchers)
 
             # reset time-steps of planning
             t_plan = 1
 
         # _________________
 
-        pi_next_t = get_new_pos(searchers, pi_s, t_plan)
+        path_next_t = pln.next_from_path(path, t_plan)
 
         # evolve searcher position
-        searchers = evolve_searchers_position(searchers, pi_next_t)
+        searchers = pln.searchers_next_position(searchers, path_next_t)
 
         # update belief
-        belief.update(searchers, pi_next_t, M, n)
+        belief.update(searchers, path_next_t, M, n)
 
         # update target
         target = evolve_target(target, belief.new)
@@ -151,7 +148,7 @@ def my_init_wrapper(exp_inputs):
     b0, M, s_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution, capture_range,
                                        zeta)
 
-    searchers = cp.create_searchers(g, v_searchers, capture_range, zeta)
+    searchers = cp.create_my_searchers(g, v_searchers, capture_range, zeta)
 
     # initialize instances of classes (initial target and searchers locations)
     belief, target, solver_data = init_all_classes(horizon, deadline, theta, g, solver_type, b0, s_info,
@@ -278,24 +275,6 @@ def update_start_info(searcher_info: dict, current_position: dict):
     return searcher_info
 
 
-def evolve_searchers_position(searchers, new_pos):
-    """call to evolve searchers position """
-
-    for s_id in searchers.keys():
-        searchers[s_id].evolve_position(new_pos[s_id])
-
-    return searchers
-
-
-def get_new_pos(searchers, s_pos_plan: dict, t_plan: int):
-    """ get new position of searchers as new_pos = {s: v}"""
-    new_pos = {}
-    for s_id in searchers.keys():
-        new_pos[s_id] = s_pos_plan[s_id, t_plan]
-
-    return new_pos
-
-
 def evolve_target(target, updated_belief: list):
     """evolve possible and true position of the target"""
     # evolve target true position (based on motion matrix)
@@ -377,17 +356,17 @@ def run_simulator_pmi(sim_param=1, inputs_opt=1, gamma=0.99, name_folder=None, s
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.xs_to_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
 
         # _________________
 
-        pi_next_t = get_new_pos(searchers, pi_s, t_plan)
+        pi_next_t = next_from_path(searchers, pi_s, t_plan)
 
         # evolve searcher position
-        searchers = evolve_searchers_position(searchers, pi_next_t)
+        searchers = searchers_next_position(searchers, pi_next_t)
 
         # update belief
         belief.update(s_info, pi_next_t, M, n)
@@ -469,17 +448,17 @@ def run_simulator_root(g, m, deadline, theta=None, horizon=None, solver_type='ce
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.xs_to_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
 
         # _________________
 
-        pi_next_t = get_new_pos(searchers, pi_s, t_plan)
+        pi_next_t = next_from_path(searchers, pi_s, t_plan)
 
         # evolve searcher position
-        searchers = evolve_searchers_position(searchers, pi_next_t)
+        searchers = searchers_next_position(searchers, pi_next_t)
 
         # update belief
         belief.update(s_info, pi_next_t, M, n)
@@ -554,17 +533,17 @@ def run_simulator_module(g, plan_input: dict, searcher_input: dict, target_input
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
 
             # get position of each searcher at each time-step based on x[s][v, t] variable
-            searchers, pi_s = pln.get_planned_path(x_searchers, V, Tau, searchers)
+            searchers, pi_s = pln.xs_to_path(x_searchers, V, Tau, searchers)
 
             # reset time-steps of planning
             t_plan = 1
 
         # _________________
 
-        pi_next_t = get_new_pos(searchers, pi_s, t_plan)
+        pi_next_t = next_from_path(searchers, pi_s, t_plan)
 
         # evolve searcher position
-        searchers = evolve_searchers_position(searchers, pi_next_t)
+        searchers = searchers_next_position(searchers, pi_next_t)
 
         # update belief
         belief.update(s_info, pi_next_t, M, n)

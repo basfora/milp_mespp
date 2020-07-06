@@ -26,7 +26,7 @@ def parameters_7v_random_motion():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
-    searchers = cp.create_searchers(g, v_searchers)
+    searchers = cp.create_my_searchers(g, v_searchers)
     n = 7
     return n, b_0, M, searchers_info, searchers
 
@@ -46,7 +46,7 @@ def parameters_7v_random_motion2():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
-    searchers = cp.create_searchers(g, v_searchers)
+    searchers = cp.create_my_searchers(g, v_searchers)
     n = 7
     return n, b_0, M, searchers_info, g, searchers
 

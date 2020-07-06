@@ -2,6 +2,10 @@
 
 from core import extract_info as ext
 from classes.searcher import MySearcher
+from classes.belief import MyBelief
+from classes.target import MyTarget
+from classes.solver_data import MySolverData
+
 # external packages
 from igraph import *
 import numpy as np
@@ -9,8 +13,299 @@ import pickle
 import random
 
 
+# init classes from specs (exp_inputs)
+def create_solver_data(specs):
+    """Initialize solver data class from specs (exp_inputs)"""
+    g = specs.graph
+
+    # planning stuff
+    deadline = specs.deadline
+    theta = specs.theta
+    horizon = specs.horizon
+    solver_type = specs.solver_type
+    timeout = specs.timeout
+
+    solver_data = MySolverData(horizon, deadline, theta, g, solver_type, timeout)
+
+    return solver_data
+
+
+def create_belief(specs):
+    """Initialize belief
+    either from distribution (uniform, split among random vertices)
+    or from given b0
+    """
+
+    if specs.b0 is None:
+        g = specs.graph
+        # type of distribution (default: uniform)
+        type_distribution = specs.belief_distribution
+        v_list = placement_list(specs, 't')
+        # create b_0 (list with probabilities, b[0] = 0)
+        b_0 = set_initial_belief(g, v_list, type_distribution)
+    else:
+        # user-defined initial belief (with b_c)
+        b_0 = specs.b0
+
+    # save on specs
+    v_list = v_list_from_belief(b_0)
+    specs.set_set_start_target_v_list(v_list)
+
+    # create belief obj
+    belief = MyBelief(b_0)
+
+    return belief
+
+
+def create_searchers(specs):
+
+    # unpack from specs
+    g = specs.graph
+    capture_range = specs.capture_range
+    zeta = specs.zeta
+    m = specs.size_team
+
+    if specs.start_searcher_v is None:
+        # if initial position was not defined by user
+        v_list = placement_list(specs, 's')
+        if specs.searcher_together:
+            v_list = searchers_start_together(m, v_list)
+
+        # len(v0) = m
+        v0 = v_list
+        specs.set_start_searcher(v0)
+    else:
+        # if it was, use that
+        v0 = specs.start_searcher_v
+
+    # set of searchers S = {1,..m}
+    S = ext.get_set_searchers(m)[0]
+    # create dict
+    searchers = {}
+    for s_id in S:
+        v = ext.get_v0_s(v0, s_id)
+        cap = ext.get_capture_range_s(capture_range, s_id)
+        zeta_s = ext.get_zeta_s(zeta, s_id)
+
+        # create each searcher
+        s = MySearcher(s_id, v, g, cap, zeta_s)
+
+        # store in dictionary
+        searchers[s_id] = s
+    return searchers
+
+
+def create_target(specs):
+    """Needs to be called AFTER belief class"""
+    # TODO expand for starting target in specific position
+    # for now: if wants to start target in place, set specs.start_target_v_list,
+    # with the first item being the true position
+
+    # unpack from target
+    motion_rule = specs.target_motion
+    g = specs.graph
+    my_seed = specs.target_seed
+
+    v_list = specs.start_target_v_list
+    true_position = specs.start_target_true
+
+    # generate motion matrix M
+    motion_matrix = my_motion_matrix(g, motion_rule)
+
+    target = MyTarget(v_list, motion_matrix, true_position, my_seed)
+
+    return target
+
+
+# initial_wrapper
+def init_wrapper(specs, sim=False):
+    """Initialize necessary classes depending on sim or plan only
+    default: plan only"""
+
+    solver_data = create_solver_data(specs)
+    searchers = create_searchers(specs)
+    belief = create_belief(specs)
+
+    if sim:
+        target = create_target(specs)
+        return belief, searchers, solver_data, target
+    else:
+        return belief, searchers, solver_data
+
+
 # ----------------------------------------------------------------------------------------------------------------------
-# instance parameters (searchers, target)
+def define_vertices_init(specs, sim=False):
+
+    if not specs.start_searcher_random and specs.b0 is not None:
+        v_searchers = specs.searcher.start
+        if sim:
+            # target motion model - Markovian
+            M = my_motion_matrix(specs.graph, specs.target_motion)
+    else:
+        v_searchers, v_target, b_0, M = all_random(specs)
+        specs.set_start_target_true(v_target)
+        if sim:
+            print('Start target: %d, searcher: %d ' % (v_target, v_searchers[0]))
+
+    specs.set_start_searcher_start(v_searchers)
+
+    print('Start searcher: %d ' % (v_searchers[0]))
+
+    return
+
+
+def all_random(specs):
+
+    # gather seeds
+    s_seed = specs.searcher_seed
+    t_seed = specs.target_seed
+    my_seed = dict()
+    my_seed['searcher'] = s_seed
+    my_seed['target'] = t_seed
+
+    # target stuff
+    target_motion = specs.target_motion
+    t_possible_nodes = specs.qty_possible_nodes
+
+    # belief stuff
+    belief_distribution = specs.belief_distribution
+
+    # searcher stuff
+    capture_range = specs.capture_range
+    m = specs.team_size
+    g = specs.graph
+
+    init_is_ok = False
+    v_target, v_searchers = None, None
+
+    while init_is_ok is False:
+
+        v_searchers, v_target = random_init_pos(g, m, t_possible_nodes, my_seed)
+
+        init_is_ok = check_reachability(g, capture_range, v_target, v_searchers)
+
+        if init_is_ok is False:
+            print('Target within range --> target: ' + str(v_target) + 'searcher ' + str(v_searchers))
+            my_seed['searcher'] = my_seed['searcher'] + 500
+
+    # initialize parameters if everything is ok
+    b_0, M = my_target_motion(g, v_target, belief_distribution, target_motion)
+
+    return v_searchers, v_target, b_0, M
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# instance parameters
+def draw_v_random(g_or_n, q=1, my_seed=None):
+    """Choose possible random vertices for the starting point of the target
+    positions are given in model indexing (1,2...)
+    :param g_or_n : graph
+    :param q : number of possible vertices
+    :param my_seed : random seed generator (optional)
+    return: v_target --> possible initial vertices of the target
+     v_left: target from the graph that are 'free' """
+    # get set of vertices
+    V, n = ext.get_set_vertices(g_or_n)
+
+    v_target = []
+
+    if my_seed is None:
+        v_left = V
+
+        # randomly pick vertices
+        for pos in range(0, q):
+            my_v = int(random.choice(v_left))
+            v_target.append(my_v)
+
+            # take out that vertex from list of possible vertices
+            v_left.remove(my_v)
+    else:
+        v_target = pick_pseudo_random(V, my_seed, q)
+        v_left = ext.get_v_left(n, v_target)
+
+    return v_target, v_left
+
+
+def placement_list(specs, op='s'):
+    """Make sure belief and searchers' start vertices are far away (out of reach)
+    so that b_c(0) = 0
+    :param specs : inputs
+    :param op : 's' to place searchers, 't' to get list of vertices for belief """
+
+    g = specs.graph
+
+    # placing searchers or belief?
+    if op == 's':
+        v_input = specs.start_target_v_list
+        my_seed = specs.searcher_seed
+        # check if searchers are starting together
+        if specs.searcher_together:
+            q = 1
+        else:
+            q = specs.size_team
+    else:
+        v_input = specs.start_searcher_v
+        # quantity of possible nodes (probability > 0)
+        q = specs.qty_possible_nodes
+        # seed
+        my_seed = specs.target_seed
+
+    if v_input is None:
+        # draw q random nodes
+        v_list, v_left = draw_v_random(g, q, my_seed)
+    else:
+        # check if it's out of reach at t = 0
+        v_taken = v_input
+        v_list = []
+        out_of_reach = False
+        # keep drawing until is out of reach
+        while out_of_reach is False:
+            v_list = draw_v_random(g, q, my_seed)
+            specs.change_seed(my_seed, 't')
+            out_of_reach = check_reachability(g, specs.capture_range, v_list, v_taken)
+            my_seed += 500
+
+    # check for bug (not a vertex in graph)
+    V = ext.get_set_vertices(g)[0]
+    if any(v_list) not in V:
+        print("Vertex out of range, V = {1, 2...n}")
+        exit()
+
+    return v_list
+
+
+# instance parameters (belief)
+def set_initial_belief(g_or_n, v_list: list, type_distribution='uniform'):
+    """ Make initial belief vector (assign probabilities to list of vertices) based on
+    :param g_or_n : graph or n, to obtain number of total vertices (n)
+    :param v_list : list of vertices # [1, 3...] to be assigned non zero probability
+    :param type_distribution : type of distribution, default is uniform """
+
+    n = ext.get_set_vertices(g_or_n)[1]
+
+    # create belief vector of zeros
+    b_0 = np.zeros(n + 1)
+
+    # get number of possible initial vertices
+    q = len(v_list)
+
+    # if the initial_prob is not a list with pre-determined initial probabilities
+    # for each possible initial vertex
+    # just consider equal probability between possible vertices
+    if type_distribution is 'uniform':
+        prob_init = 1/q
+    else:
+        prob_init = type_distribution
+
+    # initial target belief (vertices in v_list will change value, others remain zero)
+    # b[0] = 0
+    b_0[v_list] = prob_init
+
+    return list(b_0)
+
+
+# instance parameters (target)
 def my_target_motion(g, init_vertex: list,  init_prob='uniform',  motion_rule='random'):
     """Create target motion model matrix and initial belief:
     g is the graph
@@ -18,7 +313,7 @@ def my_target_motion(g, init_vertex: list,  init_prob='uniform',  motion_rule='r
     init_prob: probability for each none in init_vertex.
     If left blank probability will be equal between all vertices in init_vertex """
 
-    b_0 = my_initial_belief(g, init_vertex, init_prob)
+    b_0 = set_initial_belief(g, init_vertex, init_prob)
 
     # target motion model - Markovian, random
     M = my_motion_matrix(g, motion_rule)
@@ -26,35 +321,9 @@ def my_target_motion(g, init_vertex: list,  init_prob='uniform',  motion_rule='r
     return b_0, M
 
 
-def my_initial_belief(g, init_vertex: list, init_prob='uniform'):
-    """ Make initial belief vector based on number of vertices n
-    initial vertices (list of 1 or more)
-    optional initial probability, =1 when not specified"""
-
-    V_, n = ext.get_idx_vertices(g)
-    # create belief vector of zero
-    b_0 = np.zeros(n + 1)
-
-    # get number of possible initial vertices
-    n_init = len(init_vertex)
-
-    # if the initial_prob is not a list with pre-determined initial probabilities for each possible initial vertex
-    # just consider equal probability between possible vertices
-    if init_prob is 'uniform':
-        prob_init = 1/n_init
-    else:
-        prob_init = init_prob
-
-    # initial target belief
-    b_0[init_vertex] = prob_init
-
-    return list(b_0)
-
-
 def my_motion_matrix(g,  motion_rule='random'):
     """Define Markovian motion matrix for target
     unless specified, motion is random (uniform) according to neighbor vertices"""
-    # TODO in analysis: other types of motions
 
     V_, n = ext.get_idx_vertices(g)
 
@@ -69,7 +338,40 @@ def my_motion_matrix(g,  motion_rule='random'):
     elif motion_rule == 'static':
             M = np.identity(n)
 
-    return M.tolist()
+    my_M = M.tolist()
+    return my_M
+
+
+def v_list_from_belief(b0: list):
+
+    v_list = []
+    b_v = b0[1:]
+
+    v = 0
+    for el in b_v:
+        v += 1
+        if el > 0.0001:
+            v_list.append(v)
+
+    return v_list
+
+
+# instance parameters (searchers)
+def searchers_start_together(m: int, v):
+    """Place all searchers are one vertex
+    :param m : number of searchers
+    :param v : integer or list"""
+
+    if isinstance(v, int):
+        my_v = v
+    else:
+        my_v = v[0]
+
+    v_searchers = []
+    for i in range(m):
+        v_searchers.append(my_v)
+
+    return v_searchers
 
 
 def my_searchers_info(g, v0, capture_range=0, zeta=None):
@@ -93,14 +395,14 @@ def my_searchers_info(g, v0, capture_range=0, zeta=None):
         my_aux = {}
         for v in V:
             # loop through vertices to get capture matrices
-            C = rule_intercept(v, nu, capture_range, zeta, g)
+            C = MySearcher.rule_intercept(v, nu, capture_range, zeta, g)
             my_aux[v] = C
         idx = ext.get_python_idx(s)
         searchers_info.update({s: {'start': v0[idx], 'c_matrix': my_aux, 'zeta': zeta}})
     return searchers_info
 
 
-def create_searchers(g, v0, capture_range=0, zeta=None):
+def create_my_searchers(g, v0: list, capture_range=0, zeta=None):
     """Give searchers info (dictionary with id number as keys).
             Nested: initial position, capture matrices for each vertex"""
     # get set of searchers based on initial vertex for searchers
@@ -113,53 +415,30 @@ def create_searchers(g, v0, capture_range=0, zeta=None):
         print("Vertex out of range, V = {1, 2...n}")
         return None
 
-    # size of capture matrix
-    nu = n + 1
+    cap_s, zeta_s = 0, None
     # create dict
     searchers = {}
     for s_id in S:
-        my_aux = {}
-        for v in V:
-            # loop through vertices to get capture matrices
-            C = rule_intercept(v, nu, capture_range, zeta, g)
-            my_aux[v] = C
         idx = ext.get_python_idx(s_id)
-        C_all = my_aux
-        s = MySearcher(s_id, v0[idx], C_all, capture_range, zeta)
 
+        v_s = v0[idx]
+
+        if isinstance(capture_range, int):
+            cap_s = capture_range
+        elif isinstance(capture_range, list):
+            cap_s = capture_range[idx]
+
+        if zeta is not None:
+            if isinstance(zeta, list):
+                zeta_s = zeta[idx]
+            elif isinstance(zeta, float):
+                zeta_s = zeta
+
+        # create each searcher
+        s = MySearcher(s_id, v_s, g, cap_s, zeta_s)
+        # store in dictionary
         searchers[s_id] = s
     return searchers
-
-
-def rule_intercept(v, nu, capture_range=0, zeta=None, g=None):
-    """create C matrix based on the rule of interception
-    graph needs to be an input if it's multiple vertices"""
-
-    if zeta is None:
-        my_type = 'int32'
-        zeta = 0
-    else:
-        my_type = 'float64'
-
-    # create identity matrix (n+1) x (n+1)
-    C = np.identity(nu, my_type)
-
-    # apply rule of interception to create capture matrices
-    # same vertex (for now the same for each searcher, but can be different)
-    # if integer, zeta = 0 and 1-zeta = 1
-    if capture_range == 0:
-        C[v][v] = zeta
-        C[v][0] = 1 - zeta
-    else:
-        # list with all the vertices on the graph
-        my_row = list(range(1, nu))
-        for u in my_row:
-            distance = ext.get_node_distance(g, v, u)
-            if distance <= capture_range:
-                # assemble the capture matrix
-                C[u][u] = zeta
-                C[u][0] = 1 - zeta
-    return C
 
 
 def check_initial_conditions(v_target: list, v_searchers: list):
@@ -218,28 +497,7 @@ def searcher_random_pos(v_possible, m: int,  my_seed=None):
     return v_init
 
 
-def target_random_pos(g, init_possible=1, my_seed=None):
-    """Choose random vertices for the starting point of the target
-        positions are given in model indexing (1,2...)"""
-    # get set of vertices
-    V, n = ext.get_set_vertices(g)
 
-
-    v_target = []
-
-    if my_seed is None:
-        v_possible = V
-        # randomly pick vertices
-        for pos in range(0, init_possible):
-            my_v = int(random.choice(v_possible))
-            v_target.append(my_v)
-            # take out that vertex from list of possible vertices
-            v_possible.remove(my_v)
-    else:
-        v_target = pick_pseudo_random(V, my_seed, init_possible)
-        v_possible = [x for x in V if x not in v_target]
-
-    return v_target, v_possible
 
 
 def target_restricted(g, init_possible=4, my_seed=None):
@@ -328,7 +586,7 @@ def random_init_pos(g, m: int, init_pos=1, my_seed=None):
 
     # returns the vertex for target and searchers in model indexing (1, 2....n)
     # not corners
-    v_target, v_possible = target_random_pos(g, init_pos, my_t_seed)
+    v_target, v_possible = draw_v_random(g, init_pos, my_t_seed)
     # uncomment here for target restricted (corners)
     # v_target, v_possible = target_restricted(g, 4, my_t_seed)
     v_searchers = searcher_random_pos(v_possible, m, my_s_seed)

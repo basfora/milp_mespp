@@ -26,26 +26,42 @@ class MyInputs:
         self.capture_range = 0
         self.zeta = None              # false negatives, zeta = 0.0 for no false negatives
         self.list_m = [1, 2, 3, 4, 5]   # maximum number of searchers, m = 1, 2, 3...
-        self.searcher_seed = 0
         self.searcher_seed_start = 1050
 
         # TARGET
         self.target_motion = 'random'   # random or static
         self.qty_possible_nodes = 5     # 5 possible vertices for starting position
-        self.target_seed = 0
         self.target_seed_start = 5000
 
         # BELIEF
         self.belief_distribution = 'uniform'
 
-        # variables for iteration
-        self.start_day = datetime.datetime.today().day
+        # instance specific (special attention to these!)
+        # belief: initial belief
+        self.b0 = None
+        self.v_taken = None
 
-        self.today_run = 1
+        # searcher initial position
+        self.start_searcher_random = True
+        self.start_searcher_v = None
+        self.searcher_together = True
+
+        # target initial position
+        self.start_target_random = True
+        self.start_target_true = None
+        self.start_target_v_list = None
+
+        # Monte Carlo Sim
+        # first run of the day
+        self.start_day = datetime.datetime.today().day
         # turns 0-runs_per_m
         self.runs_per_m = 20
-        self.list_turns = list(range(self.today_run-1, self.runs_per_m))
+        self.list_turns = list(range(self.today_run - 1, self.runs_per_m))
 
+        # variables for iteration
+        self.today_run = 1
+        self.searcher_seed = 0
+        self.target_seed = 0
         self.name_folder = ''
 
     def get_graph(self, graph_number: int):
@@ -112,6 +128,12 @@ class MyInputs:
         self.searcher_seed = turn + self.searcher_seed_start
         self.target_seed = turn + self.target_seed_start
 
+    def change_seed(self, my_seed: int, who: str):
+        if who == 's':
+            self.searcher_seed = my_seed
+        elif who == 't':
+            self.target_seed = my_seed
+
     def update_run_number(self):
         self.today_run = self.today_run + 1
 
@@ -147,11 +169,36 @@ class MyInputs:
     def set_target_motion(self, my_motion: str):
         self.target_motion = my_motion
 
-    def set_belief_distribution(self, b0):
-        self.belief_distribution = b0
+    def set_belief_distribution_type(self, type_of_belief: str):
+        self.belief_distribution = type_of_belief
+
+    def set_b0(self, b0):
+        """include belief capture --> len(b0) = n + 1"""
+        self.b0 = b0
 
     def set_timeout(self, timeout: int):
         self.timeout = timeout
+
+    def set_start_searcher_start(self, v0: list):
+        self.start_searcher_random = False
+        self.start_searcher_v = v0
+
+    def set_start_target_true(self, v0: int):
+        self.start_target_random = False
+        self.start_target_true = v0
+
+    def set_start_target_v_list(self, v_list: list):
+        self.start_target_random = False
+        self.start_target_true = v_list
+
+    def set_v_taken(self, v_list: list, who: str):
+        self.v_taken = v_list
+        if who == 's':
+            self.set_start_searcher_start(v_list)
+        else:
+            self.set_start_target_v_list(v_list)
+
+
 
 
 

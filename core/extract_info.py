@@ -29,8 +29,16 @@ def get_set_searchers(info_input):
         m = len(info_input)
         S = list(range(1,  m + 1))
     elif isinstance(info_input, dict):
-        S = list(info_input.keys())
-        m = len(S)
+        my_keys = [k for k in info_input.keys()]
+        if len(my_keys[0]) == 1:
+            # searchers[s]
+            S = list(info_input.keys())
+            m = len(S)
+        else:
+            # x_s(s, v, t)
+            m = get_m(info_input)
+            S = list(range(1, m+1))
+
     elif isinstance(info_input, int):
         m = info_input
         S = list(range(1, m + 1))
@@ -39,20 +47,6 @@ def get_set_searchers(info_input):
         m = None
         S = None
     return S, m
-
-
-def get_m_from_xs(x_searchers: dict):
-    """Get number of searchers from triple tuple (s, v, t)
-    UT-OK"""
-
-    x_keys = x_searchers.keys()
-
-    # list of s
-    s_in_keys = [k[0] for k in x_keys]
-    # max s
-    m = max(s_in_keys)
-
-    return m
 
 
 def get_set_time(deadline):
@@ -76,11 +70,19 @@ def get_set_ext_time(time_input):
         return None
 
 
-def get_set_vertices(g):
-    """Return set of graph vertices,
-    V = {1, 2,...n}"""
-    n = len(g.vs)
+def get_set_vertices(g_or_n):
+    """Get number of vertices from the graph, or just pass n itself
+    Return set of graph vertices, V = {1, 2,...n}
+    """
+
+    if isinstance(g_or_n, int):
+        n = g_or_n
+    else:
+        g = g_or_n
+        n = len(g.vs)
+
     V = list(range(1, n+1))
+
     return V, n
 
 
@@ -125,9 +127,18 @@ def get_sets_only(searcher_vector: list, deadline: int, g):
 def get_sets_and_ranges(g, m: int, horizon: int):
 
     S, m = get_set_searchers(m)
-    Tau = get_set_ext_time(horizon)
+    T = get_set_ext_time(horizon)
     V, n = get_set_vertices(g)
-    return S, V, Tau, n, m
+    return S, V, T, n, m
+
+
+def get_v_left(g_or_n, v_list):
+    """Return vertices from graph not in v_list"""
+
+    V, n = get_set_vertices(g_or_n)
+    v_left = [x for x in V if x not in v_list]
+
+    return v_left
 
 
 # ---------------------
@@ -580,6 +591,9 @@ def find_captor(searchers):
     return None
 
 
+
+
+
 # -------------------------------------
 # sampling from distributions
 # -------------------------------------
@@ -800,8 +814,38 @@ def get_from_tuple_key(k):
         t = k[1]
         return s, t
     else:
-        print('Error, tuple is wrong dimension')
+        print('Error, tuple is of wrong dimension')
         return None
+
+
+def get_h(my_dict: dict):
+    """time is always last item from tuple key
+    path[s, t] or x_s[s, v, t]"""
+
+    keys = my_dict.keys()
+
+    # list of times
+    all_t = [k[-1] for k in keys]
+
+    # max t
+    t = max(all_t)
+
+    return t
+
+
+def get_m(my_dict: dict):
+    """Get number of searchers from
+    triple tuple (s, v, t) or path(s, t)
+    UT-OK"""
+
+    x_keys = my_dict.keys()
+
+    # list of s
+    s_in_keys = [k[0] for k in x_keys]
+    # max s
+    m = max(s_in_keys)
+
+    return m
 
 
 def create_2tuple_keys(list1, list2):
@@ -873,3 +917,41 @@ def init_dict_variables(n_var: int):
     return my_vars
 
 
+def get_v0_s(v0, s_id):
+    """Get start vertex of single searcher s
+    v0: list of vertices"""
+    idx = ext.get_python_idx(s_id)
+    v_s = v0[idx]
+    return v_s
+
+
+def get_capture_range_s(capture_range, s):
+    """Get capture range of single searcher s"""
+    cap_s = 0
+    if isinstance(capture_range, int):
+        cap_s = capture_range
+    elif isinstance(capture_range, list):
+        idx = ext.get_python_idx(s)
+        cap_s = capture_range[idx]
+
+    return cap_s
+
+
+def get_zeta_s(zeta, s):
+    """Get false negative for a single searcher s from:
+    a list (if different for each searcher),
+    a float (if common for all searchers)
+    None: no false negatives
+    """
+
+    zeta_s = None
+
+    if zeta is None:
+        return zeta_s
+    else:
+        if isinstance(zeta, list):
+            idx = ext.get_python_idx(s)
+            zeta_s = zeta[idx]
+        elif isinstance(zeta, float):
+            zeta_s = zeta
+        return zeta_s

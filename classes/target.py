@@ -24,10 +24,10 @@ class MyTarget:
         # if no true information was provided, use the information used in the planning
         # true position is always a single vertex
         if true_position is None:
-            if len(plan_position) == 1:
+            if len(plan_position) > 0:
                 true_position = plan_position[0]
             else:
-                print("Please provide a single start vertex for the target simulation.")
+                print("Please provide a start vertex for the target simulation.")
                 exit()
         if true_motion is None:
             true_motion = motion_matrix

@@ -6,13 +6,14 @@
 
 import numpy as np
 from core import extract_info as ext, milp_fun as mf, construct_model as cm
+from core import create_parameters as cp
 from core import sim_fun as sf
 
 from core import retrieve_data as rd
-from classes.inputs import MyInputs
 from gurobipy import *
 
 
+# main wrappers
 def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, opt='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
     """Run solver according to type of planning specified"""
 
@@ -153,7 +154,65 @@ def distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout=5, n
                     return obj_fun_list, time_sol_list, gap_list, x_searchers, b_target, threads
 
 
-# searchers path
+def plan_init_wrapper(exp_inputs):
+
+    solver_data = cp.create_solver_data(exp_inputs)
+
+    g = exp_inputs.graph
+
+    capture_range = exp_inputs.capture_range
+    m = exp_inputs.size_team
+    zeta = exp_inputs.zeta
+
+    # belief stuff
+    belief_distribution = exp_inputs.belief_distribution
+
+    if exp_inputs.start_searcher_random:
+        # gather seeds
+        s_seed = exp_inputs.searcher_seed
+        t_seed = exp_inputs.target_seed
+
+        my_seed = dict()
+        my_seed['searcher'] = s_seed
+        my_seed['target'] = t_seed
+
+        # target
+        t_possible_nodes = exp_inputs.qty_possible_nodes
+
+        # searchers
+        init_is_ok = False
+        v_target, v_searchers = None, None
+
+        while init_is_ok is False:
+
+            v_searchers, v_target = cp.random_init_pos(g, m, t_possible_nodes, my_seed)
+
+            init_is_ok = cp.check_reachability(g, capture_range, v_target, v_searchers)
+
+            if init_is_ok is False:
+                print('Target within range --> target: ' + str(v_target) + 'searcher ' + str(v_searchers))
+                my_seed['searcher'] = my_seed['searcher'] + 500
+
+            # initialize parameters if everything is ok
+            b0, M, s_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution,
+                                               capture_range, zeta)
+    else:
+        v_searchers = exp_inputs.start_searcher_v
+
+    # belief
+    belief = MyBelief(init_belief)
+
+    searchers = cp.create_my_searchers(g, v_searchers, capture_range, zeta)
+
+    print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
+
+    return belief, searchers, solver_data
+
+
+
+# ----------------------------------------------------
+# searchers
+# define searchers path
 def keep_all_still(temp_pi):
     """Return the variable x_s correspondent the current searchers' positions
     input: temp_pi(s, t) = v
@@ -203,36 +262,34 @@ def update_temp_path(searchers: dict, temp_pi: dict, my_s: int):
     return temp_pi
 
 
-def xs_to_path(x_s: dict, V: list, T: list, searchers=None):
+# get searchers path after planner
+def xs_to_path(x_s: dict):
     """Get x variables which are one and save it as the planned path path[s_id, time]: v
-    save planned path in searchers"""
-    s_pi = {}
+    save planned path in searchers
+    Convert from
+    x_s(s, v, t) = 1
+    to
+    OUTPUT pi(s, t) = v"""
 
-    m = ext.get_m_from_xs(x_s)
-    S = ext.get_set_searchers(m)[0]
+    pi = dict()
 
-    for s in S:
-        path_planned = []
-        for t in T:
-            for v in V:
-                my_value = x_s.get((s, v, t))
-                if my_value == 1:
-                    s_pi[s, t] = v
-                    path_planned.append(v)
-        if searchers is not None:
-            searchers[s].store_path_planned(path_planned)
+    for k in x_s.keys():
+        value = x_s.get(k)
+        s, v, t = ext.get_from_tuple_key(k)
 
-    return searchers, s_pi
+        if value == 1:
+            pi[s, t] = v
+
+    return pi
 
 
 def path_to_xs(path: dict):
     """Convert from
     pi(s, t) = v
     to
-    x_s(s, v, t) = 1"""
+    OUTPUT x_s(s, v, t) = 1"""
 
     x_searchers = {}
-
     for k in path.keys():
 
         # ignore first one (if it's temp_pi)
@@ -248,6 +305,51 @@ def path_to_xs(path: dict):
     return x_searchers
 
 
+def path_as_lists(path: dict):
+    """Get sequence of vertices from path[s, t] = v
+    for searcher s
+    return as list [v0, v1, v2...vh]"""
+
+    pi = dict()
+
+    h = ext.get_h(path)
+    m = ext.get_m(path)
+    T = ext.get_set_ext_time(h)
+    S = ext.get_set_searchers(m)[0]
+
+    # loop through time
+    for s in S:
+        pi[s] = []
+        for t in T:
+            v = path[(s, t)]
+            pi[s].append(v)
+
+    return pi
+
+
+def path_of_s(path: dict, s_id):
+    """Get sequence of vertices [list] for searcher s_id
+    INPUT path[s, t] = v
+    OUTPUT [v0, ....v]"""
+
+    pi = path_as_lists(path)
+
+    return pi[s_id]
+
+
+def next_from_path(path: dict, t_plan: int):
+    """ get new position of searchers as new_pos = {s: v}"""
+
+    m = ext.get_m(path)
+    S = ext.get_set_searchers(m)[0]
+
+    new_pos = dict()
+    for s_id in S:
+        new_pos[s_id] = path[(s_id, t_plan)]
+
+    return new_pos
+
+
 def get_all_from_xs(x_s):
     """Return list of (s, v, t, value) tuples from x_s"""
 
@@ -258,6 +360,43 @@ def get_all_from_xs(x_s):
         my_list.append((s, v, t, value))
 
     return my_list
+
+
+# modify searchers class
+def update_plan(searchers: dict, x_s: dict):
+    """Get new plan from x_searchers variable
+    Store new plan on searchers class"""
+
+    # get position of all searchers based on x[s, v, t] variable from solver
+    path = xs_to_path(x_s)
+
+    searchers = store_path(searchers, path)
+
+    return searchers, path
+
+
+def store_path(searchers: dict, path: dict):
+    """
+    Store paths for all searchers
+    :param searchers [s] dict of searcher class
+    :param path [s, t] = v
+    """
+
+    for s_id in searchers.keys():
+        s = searchers[s_id]
+        path_s = path_of_s(path, s_id)
+        s.store_path_planned(path_s)
+
+    return searchers
+
+
+def searchers_next_position(searchers, new_pos):
+    """call to evolve searchers position """
+
+    for s_id in searchers.keys():
+        searchers[s_id].evolve_position(new_pos[s_id])
+
+    return searchers
 
 
 # ----------------------------------------------------------------------------
@@ -331,7 +470,7 @@ def run_planner(specs):
         return None
 
     # get position of each searcher at each time-step based on x[s][v, t] variable
-    searchers, pi_s = xs_to_path(x_searchers, V, Tau, searchers)
+    searchers, path = update_plan(searchers, x_searchers)
 
     return belief, target, searchers, solver_data
 
@@ -372,3 +511,6 @@ def create_txt(name_folder):
 
 
 # -----------------------------------------------------
+
+
+

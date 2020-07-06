@@ -1,5 +1,3 @@
-from igraph import *
-
 
 class MySolverData:
     """Save at each time the MILP solver is called:
@@ -11,7 +9,7 @@ class MySolverData:
     - gap
     """
 
-    def __init__(self, horizon, deadline, theta, my_graph, solver_type='central'):
+    def __init__(self, horizon, deadline, theta, my_graph, solver_type='central', timeout=30*60):
         """ initialize after solver is first called
         :param number_searchers:
         """
@@ -32,13 +30,14 @@ class MySolverData:
         self.horizon[0] = horizon
 
         # input parameters (immutable)
-        self.g = Graph()
+        self.g = None
         self.g = my_graph
 
         self.theta = theta
         self.deadline = deadline
 
         self.solver_type = solver_type
+        self.timeout = timeout
 
         self.threads = {}
 

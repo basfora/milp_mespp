@@ -24,6 +24,7 @@ def create_model():
 
     return md
 
+
 def add_constraints(md, g, my_vars: dict, searchers: dict, vertices_t: dict, deadline: int, b0: list, M: list):
     """define the model constraints according to given parameters
     searchers constraints: (1) - (4)
@@ -445,7 +446,7 @@ def enforce_binary(x_searchers, t_max):
 
     old_x_searchers = x_searchers
 
-    m = ext.get_m_from_xs(x_searchers)
+    m = ext.get_m(x_searchers)
     S = ext.get_set_searchers(m)[0]
 
     x_keys = old_x_searchers.keys()

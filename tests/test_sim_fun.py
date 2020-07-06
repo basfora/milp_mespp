@@ -45,7 +45,7 @@ def output_inputs():
     belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info,
                                                               v0_target, M)
 
-    searchers = cp.create_searchers(g, v0_searchers)
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
     return belief, target, searchers, sim_data, b_0, M, searchers_info
 
@@ -65,7 +65,7 @@ def test_init_all_classes():
 
     # initialize parameters according to inputs
     b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
-    searchers = cp.create_searchers(g, v0_searchers)
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
     # initialize instances of classes (initial target and searchers locations)
     belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info, v0_target, M)
@@ -170,7 +170,7 @@ def test_get_positions_searchers():
     belief, target, sim_data = sf.init_all_classes(horizon, deadline, theta, g, 'central', b_0, s_info,
                                                    v0_target, M)
 
-    searchers = cp.create_searchers(g, v0_searchers)
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
     obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, s_info, b_0, M)
 
@@ -189,8 +189,8 @@ def test_get_positions_searchers():
     assert searchers[1].path_planned[0] == [1, 3, 5, 6]
     assert searchers[2].path_planned[0] == [2, 5, 6, 7]
 
-    new_pos = sf.get_new_pos(searchers, s_pos, 1)
-    searchers = sf.evolve_searchers_position(searchers, new_pos)
+    new_pos = core.plan_fun.next_from_path(searchers, s_pos, 1)
+    searchers = core.plan_fun.searchers_next_position(searchers, new_pos)
 
     assert searchers[1].path_taken[1] == 3
     assert searchers[2].path_taken[1] == 5
@@ -231,7 +231,7 @@ def test_time_consistency():
     belief, target, sim_data = sf.init_all_classes(horizon, deadline, theta, g, solver_type, b_0,  s_info,
                                                    v0_target, M)
 
-    searchers = cp.create_searchers(g, v0_searchers)
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0
@@ -253,10 +253,10 @@ def test_time_consistency():
     t_plan = 1
 
     # EVOLVE THINGS
-    new_pos = sf.get_new_pos(searchers, s_pos_plan, t_plan)
+    new_pos = core.plan_fun.next_from_path(searchers, s_pos_plan, t_plan)
 
     # evolve searcher position
-    searchers = sf.evolve_searchers_position(searchers, new_pos)
+    searchers = core.plan_fun.searchers_next_position(searchers, new_pos)
 
     # update belief
     belief.update(s_info, new_pos, M, n)
