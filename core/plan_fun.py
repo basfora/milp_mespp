@@ -4,16 +4,34 @@
 - run_solver
 """
 
-import numpy as np
 from core import extract_info as ext, milp_fun as mf, construct_model as cm
 from core import create_parameters as cp
-from core import sim_fun as sf
-
-from core import retrieve_data as rd
+from classes.inputs import MyInputs
 from gurobipy import *
 
 
 # main wrappers
+def run_default_planner():
+    """Initialize the planner the pre-set parameters
+        Return path of searchers as list"""
+
+    specs = cp.define_specs()
+
+    belief, searchers, solver_data, target = init_wrapper(specs)
+
+    # unpack parameters
+    g = specs.graph
+    h = specs.horizon
+    b0 = belief.new
+    M = target.unpack()
+
+    obj_fun, time_sol, gap, x_s, b_target, threads = run_solver(g, h, searchers, b0, M)
+
+    path = print_path(x_s)
+
+    return path
+
+
 def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, opt='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
     """Run solver according to type of planning specified"""
 
@@ -154,60 +172,22 @@ def distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout=5, n
                     return obj_fun_list, time_sol_list, gap_list, x_searchers, b_target, threads
 
 
-def plan_init_wrapper(exp_inputs):
+# initial_wrapper
+def init_wrapper(specs, sim=False):
+    """Initialize necessary classes depending on sim or plan only
+    default: plan only"""
 
-    solver_data = cp.create_solver_data(exp_inputs)
+    solver_data = cp.create_solver_data(specs)
+    searchers = cp.create_searchers(specs)
+    belief = cp.create_belief(specs)
+    target = cp.create_target(specs)
 
-    g = exp_inputs.graph
-
-    capture_range = exp_inputs.capture_range
-    m = exp_inputs.size_team
-    zeta = exp_inputs.zeta
-
-    # belief stuff
-    belief_distribution = exp_inputs.belief_distribution
-
-    if exp_inputs.start_searcher_random:
-        # gather seeds
-        s_seed = exp_inputs.searcher_seed
-        t_seed = exp_inputs.target_seed
-
-        my_seed = dict()
-        my_seed['searcher'] = s_seed
-        my_seed['target'] = t_seed
-
-        # target
-        t_possible_nodes = exp_inputs.qty_possible_nodes
-
-        # searchers
-        init_is_ok = False
-        v_target, v_searchers = None, None
-
-        while init_is_ok is False:
-
-            v_searchers, v_target = cp.random_init_pos(g, m, t_possible_nodes, my_seed)
-
-            init_is_ok = cp.check_reachability(g, capture_range, v_target, v_searchers)
-
-            if init_is_ok is False:
-                print('Target within range --> target: ' + str(v_target) + 'searcher ' + str(v_searchers))
-                my_seed['searcher'] = my_seed['searcher'] + 500
-
-            # initialize parameters if everything is ok
-            b0, M, s_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution,
-                                               capture_range, zeta)
+    if sim:
+        print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
     else:
-        v_searchers = exp_inputs.start_searcher_v
+        print('Start searcher: %d ' % searchers[1].start)
 
-    # belief
-    belief = MyBelief(init_belief)
-
-    searchers = cp.create_my_searchers(g, v_searchers, capture_range, zeta)
-
-    print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
-
-    return belief, searchers, solver_data
-
+    return belief, searchers, solver_data, target
 
 
 # ----------------------------------------------------
@@ -305,7 +285,7 @@ def path_to_xs(path: dict):
     return x_searchers
 
 
-def path_as_lists(path: dict):
+def path_as_list(path: dict):
     """Get sequence of vertices from path[s, t] = v
     for searcher s
     return as list [v0, v1, v2...vh]"""
@@ -327,12 +307,23 @@ def path_as_lists(path: dict):
     return pi
 
 
+def print_path(x_s: dict):
+    pi_dict = xs_to_path(x_s)
+    path = path_as_list(pi_dict)
+
+    for s in path.keys():
+        path_s = path[s]
+        print("Searcher %d: %s" % (s, path_s))
+
+    return path
+
+
 def path_of_s(path: dict, s_id):
     """Get sequence of vertices [list] for searcher s_id
     INPUT path[s, t] = v
     OUTPUT [v0, ....v]"""
 
-    pi = path_as_lists(path)
+    pi = path_as_list(path)
 
     return pi[s_id]
 
@@ -397,120 +388,8 @@ def searchers_next_position(searchers, new_pos):
         searchers[s_id].evolve_position(new_pos[s_id])
 
     return searchers
-
-
 # ----------------------------------------------------------------------------
-def initialize_planner(my_graph, my_h):
-    """Initialize the planner the pre-set parameters
-    If needed, change parameters here"""
-
-    # ---------------------------------------
-    # fixed parameters
-    m = 3
-    turns = 200
-    solver_type = 'distributed'
-    # time stuff
-    horizon = my_h
-    deadline = horizon
-    theta = horizon
-    # ---------------------------------------
-    # initialize default inputs
-    exp_inputs = MyInputs()
-
-    # graph number -- G25_home = 6
-    exp_inputs.get_graph(my_graph)
-
-    # solver parameter: central x distributed
-    exp_inputs.set_solver_type(solver_type)
-
-    # searchers' detection: capture range and false negatives
-    exp_inputs.set_size_team(m)
-
-    if my_graph == 2:
-        exp_inputs.set_capture_range(1)
-        exp_inputs.set_zeta(0.3)
-
-    # time stuff: deadline mission (tau), planning horizon (h), re-plan frequency (theta)
-    exp_inputs.set_all_times(horizon)
-
-    # repetitions for each configuration
-    exp_inputs.set_number_of_runs(turns)
-
-    exp_inputs.set_timeout(120)
-
-    # target stuff
-    exp_inputs.set_target_motion('random')
-
-    return exp_inputs
 
 
-def run_planner(specs):
-
-    t = 0
-    # get sets for easy iteration
-    S, V, Tau, n, m = ext.get_sets_and_ranges(specs.graph, specs.size_team, specs.horizon)
-
-    belief, target, searchers, solver_data = sf.my_init_wrapper(specs)
-
-    M = target.unpack()
-    timeout = specs.timeout
-
-    # ------------------------------------------
-    # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = run_solver(specs.graph, specs.horizon, searchers,
-                                                                        belief.new, M, specs.gamma,
-                                                                        specs.solver_type, timeout)
-
-    # save the new data
-    solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
-
-    # break here if the problem was infeasible
-    if time_sol is None or gap is None or obj_fun is None:
-        # belief, target, searchers, solver_data
-        return None
-
-    # get position of each searcher at each time-step based on x[s][v, t] variable
-    searchers, path = update_plan(searchers, x_searchers)
-
-    return belief, target, searchers, solver_data
-
-
-def list_n_nodes():
-
-    turns = 200
-    list_qty = []
-
-    for i in range(0, turns):
-        random_n = np.random.randint(low=2, high=15)
-        list_qty.append(random_n)
-
-    return list_qty
-
-
-def this_folder(name_folder, parent_folder='data'):
-
-    f_path = ext.get_whole_path(name_folder, parent_folder)
-
-    return f_path
-
-
-def create_txt(name_folder):
-
-    my_path = this_folder(name_folder, 'data_plan')
-
-    # get data
-    data = rd.load_data(my_path)
-
-    if data is None:
-        print('X - ', sep=' ', end='', flush=True)
-
-    # classes
-    belief, target, searchers, solver_data, exp_inputs = rd.get_classes(data)
-
-    rd.organize_data_make_files(belief, target, searchers, solver_data, exp_inputs, my_path)
-
-
-# -----------------------------------------------------
-
-
-
+if __name__ == "__main__":
+    planned_path = run_default_planner()

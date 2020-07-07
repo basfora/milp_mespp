@@ -591,9 +591,6 @@ def find_captor(searchers):
     return None
 
 
-
-
-
 # -------------------------------------
 # sampling from distributions
 # -------------------------------------
@@ -920,7 +917,7 @@ def init_dict_variables(n_var: int):
 def get_v0_s(v0, s_id):
     """Get start vertex of single searcher s
     v0: list of vertices"""
-    idx = ext.get_python_idx(s_id)
+    idx = get_python_idx(s_id)
     v_s = v0[idx]
     return v_s
 
@@ -931,7 +928,7 @@ def get_capture_range_s(capture_range, s):
     if isinstance(capture_range, int):
         cap_s = capture_range
     elif isinstance(capture_range, list):
-        idx = ext.get_python_idx(s)
+        idx = get_python_idx(s)
         cap_s = capture_range[idx]
 
     return cap_s
@@ -950,8 +947,15 @@ def get_zeta_s(zeta, s):
         return zeta_s
     else:
         if isinstance(zeta, list):
-            idx = ext.get_python_idx(s)
+            idx = get_python_idx(s)
             zeta_s = zeta[idx]
         elif isinstance(zeta, float):
             zeta_s = zeta
         return zeta_s
+
+
+def this_folder(name_folder, parent_folder='data'):
+
+    f_path = ext.get_whole_path(name_folder, parent_folder)
+
+    return f_path

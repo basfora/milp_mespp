@@ -1028,6 +1028,22 @@ def check_milp_vs_cpp_sum():
         print(':.:Cost Fun from CPP:  %.4f' % obj_fun_cpp)
 
 
+def create_txt(name_folder):
+
+    my_path = ext.this_folder(name_folder, 'data_plan')
+
+    # get data
+    data = load_data(my_path)
+
+    if data is None:
+        print('X - ', sep=' ', end='', flush=True)
+
+    # classes
+    belief, target, searchers, solver_data, exp_inputs = get_classes(data)
+
+    organize_data_make_files(belief, target, searchers, solver_data, exp_inputs, my_path)
+
+
 if __name__ == "__main__":
     # my_script()
     # find_inf()
@@ -1036,6 +1052,3 @@ if __name__ == "__main__":
     # check_milp_vs_cpp_sum()
     # check_milp()
     # get_single_file('data_review/DH10S1-5G2FNMV', 11)
-
-
-

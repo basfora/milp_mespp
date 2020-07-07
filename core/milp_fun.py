@@ -535,38 +535,3 @@ def query_and_print_variables(md):
     return x_searchers, b_target
 
 
-# TODO deprecated -- delete (only used for text_sim_fun)
-# model
-def run_gurobi(graph_file, horizon: int, searchers_info: dict, b0: list, M_target, gamma=0.99):
-    """Start and run model based on graph_file (map), deadline (number of time steps)"""
-
-    g = ext.get_graph(graph_file)
-
-    # create model
-    md = Model("my_model")
-
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
-
-    # add variables
-    my_vars = add_variables(md, g, horizon, start, vertices_t, )
-
-    # add constraints (central algorithm)
-    add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b0, M_target)
-
-    set_solver_parameters(md, gamma, horizon, my_vars)
-
-    md.update()
-    # Optimize model
-    md.optimize()
-
-    if GRB.Status == 3:
-        print('Optimization problem was infeasible.')
-        return False
-    elif md.Status == 2:
-        # Optimal solution found.
-        return True, md
-    else:
-        print('Unknown error')
-        print(md.GRB.Status)
-        return False
-

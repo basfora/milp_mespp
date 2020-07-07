@@ -5,12 +5,27 @@ from classes.searcher import MySearcher
 from classes.belief import MyBelief
 from classes.target import MyTarget
 from classes.solver_data import MySolverData
+from classes.inputs import MyInputs
 
 # external packages
 from igraph import *
 import numpy as np
 import pickle
 import random
+
+
+# init inputs class
+def define_specs():
+    """Initialize pre-set parameters
+    If needed, change parameters here using MyInputs() class functions
+    Return: specs"""
+
+    specs = MyInputs()
+    # -------------------
+    # call here MyInputs() functions to change default specs
+    # -------------------
+
+    return specs
 
 
 # init classes from specs (exp_inputs)
@@ -117,84 +132,6 @@ def create_target(specs):
     return target
 
 
-# initial_wrapper
-def init_wrapper(specs, sim=False):
-    """Initialize necessary classes depending on sim or plan only
-    default: plan only"""
-
-    solver_data = create_solver_data(specs)
-    searchers = create_searchers(specs)
-    belief = create_belief(specs)
-
-    if sim:
-        target = create_target(specs)
-        return belief, searchers, solver_data, target
-    else:
-        return belief, searchers, solver_data
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-def define_vertices_init(specs, sim=False):
-
-    if not specs.start_searcher_random and specs.b0 is not None:
-        v_searchers = specs.searcher.start
-        if sim:
-            # target motion model - Markovian
-            M = my_motion_matrix(specs.graph, specs.target_motion)
-    else:
-        v_searchers, v_target, b_0, M = all_random(specs)
-        specs.set_start_target_true(v_target)
-        if sim:
-            print('Start target: %d, searcher: %d ' % (v_target, v_searchers[0]))
-
-    specs.set_start_searcher_start(v_searchers)
-
-    print('Start searcher: %d ' % (v_searchers[0]))
-
-    return
-
-
-def all_random(specs):
-
-    # gather seeds
-    s_seed = specs.searcher_seed
-    t_seed = specs.target_seed
-    my_seed = dict()
-    my_seed['searcher'] = s_seed
-    my_seed['target'] = t_seed
-
-    # target stuff
-    target_motion = specs.target_motion
-    t_possible_nodes = specs.qty_possible_nodes
-
-    # belief stuff
-    belief_distribution = specs.belief_distribution
-
-    # searcher stuff
-    capture_range = specs.capture_range
-    m = specs.team_size
-    g = specs.graph
-
-    init_is_ok = False
-    v_target, v_searchers = None, None
-
-    while init_is_ok is False:
-
-        v_searchers, v_target = random_init_pos(g, m, t_possible_nodes, my_seed)
-
-        init_is_ok = check_reachability(g, capture_range, v_target, v_searchers)
-
-        if init_is_ok is False:
-            print('Target within range --> target: ' + str(v_target) + 'searcher ' + str(v_searchers))
-            my_seed['searcher'] = my_seed['searcher'] + 500
-
-    # initialize parameters if everything is ok
-    b_0, M = my_target_motion(g, v_target, belief_distribution, target_motion)
-
-    return v_searchers, v_target, b_0, M
-
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 # instance parameters
 def draw_v_random(g_or_n, q=1, my_seed=None):
@@ -225,6 +162,20 @@ def draw_v_random(g_or_n, q=1, my_seed=None):
         v_left = ext.get_v_left(n, v_target)
 
     return v_target, v_left
+
+
+def pick_pseudo_random(my_list: list, my_seed: int, qty: int, replace_opt=None):
+
+    # set seed
+    np.random.seed(my_seed)
+
+    if replace_opt is None:
+        replace_opt = False
+
+    # idx_list = np.random.randint(low=0, high=last_idx, size=qty)
+    random_list = np.random.choice(my_list, qty, replace=replace_opt).tolist()
+
+    return random_list
 
 
 def placement_list(specs, op='s'):
@@ -356,6 +307,69 @@ def v_list_from_belief(b0: list):
     return v_list
 
 
+def target_restricted(g, init_possible=4, my_seed=None):
+
+    # target
+    # corners
+    v_init_target = [1, 8, 71, 78]
+    n_y_target = 3
+
+    v_rtd = random_corners(v_init_target, n_y_target)
+
+    v_target = []
+
+    for i in range(0, init_possible):
+        print(v_target)
+        my_v = pick_pseudo_random(v_rtd[i], my_seed, 1)
+        v_target.append(my_v[0])
+
+    # center
+    # searchers
+    v_init_searcher = [34]
+    n_y_searcher = 4
+    v_dict = random_corners(v_init_searcher, n_y_searcher)
+    v_possible = v_dict[0]
+
+    # print(v_possible)
+
+    return v_target, v_possible
+
+
+def random_corners(v_init, n_y, n_columns=10):
+
+    V_rtd = {}
+
+    i = 0
+    while i < len(v_init):
+        # "groups"
+        V_rtd[i] = []
+        j = 0
+        while j < n_y:
+            # rows
+            v_it = v_init[i] + j
+            v_numbers = list(range(v_it, v_it + (n_y * n_columns), n_columns))
+            for el in v_numbers:
+                # append
+                V_rtd[i].append(el)
+
+            j += 1
+            print(V_rtd)
+        i += 1
+
+    return V_rtd
+
+
+def list_random_q(turns=200):
+
+    list_qty = []
+
+    for i in range(0, turns):
+        random_n = np.random.randint(low=2, high=15)
+        list_qty.append(random_n)
+
+    return list_qty
+
+
 # instance parameters (searchers)
 def searchers_start_together(m: int, v):
     """Place all searchers are one vertex
@@ -441,7 +455,7 @@ def create_my_searchers(g, v0: list, capture_range=0, zeta=None):
     return searchers
 
 
-def check_initial_conditions(v_target: list, v_searchers: list):
+def check_same_vertex(v_target: list, v_searchers: list):
     """Check if the searchers and target are in different initial vertices"""
     common_el = set(v_target) - (set(v_target) - set(v_searchers))
     if len(common_el) > 0:
@@ -466,137 +480,9 @@ def check_reachability(g, capture_range, v_target, v_searchers):
     return init_is_ok
 
 
-def init_parameters(g, v_target: list, v_searchers: list, target_motion: str, belief_distribution: str,
-                    capture_range=0, zeta=None):
-
-    b_0, M = my_target_motion(g, v_target, belief_distribution, target_motion)
-    s_info = my_searchers_info(g, v_searchers, capture_range, zeta)
-
-    return b_0, M, s_info
-
-
-def searcher_random_pos(v_possible, m: int,  my_seed=None):
-    """Choose random vertices for the starting point of the searchers
-    positions are given in model indexing (1,2...)"""
-
-    # get set of searchers
-    S, m = ext.get_set_searchers(m)
-
-    v_init = []
-
-    if my_seed is None:
-        for s in S:
-            my_v = int(random.choice(v_possible))
-            # append to list
-            v_init.append(my_v)
-    else:
-        v = pick_pseudo_random(v_possible, my_seed, 1)
-        for i in S:
-            v_init.append(v[0])
-
-    return v_init
-
-
-
-
-
-def target_restricted(g, init_possible=4, my_seed=None):
-
-    # target
-    # corners
-    v_init_target = [1, 8, 71, 78]
-    n_y_target = 3
-
-    v_rtd = random_corners(v_init_target, n_y_target)
-
-    v_target = []
-
-    for i in range(0, init_possible):
-        print(v_target)
-        my_v = pick_pseudo_random(v_rtd[i], my_seed, 1)
-        v_target.append(my_v[0])
-
-    # center
-    # searchers
-    v_init_searcher = [34]
-    n_y_searcher = 4
-    v_dict = random_corners(v_init_searcher, n_y_searcher)
-    v_possible = v_dict[0]
-
-    # print(v_possible)
-
-    return v_target, v_possible
-
-
-def random_corners(v_init, n_y, n_columns=10):
-
-    V_rtd = {}
-
-    i = 0
-    while i < len(v_init):
-        # "groups"
-        V_rtd[i] = []
-        j = 0
-        while j < n_y:
-            # rows
-            v_it = v_init[i] + j
-            v_numbers = list(range(v_it, v_it + (n_y * n_columns), n_columns))
-            for el in v_numbers:
-                # append
-                V_rtd[i].append(el)
-
-            j += 1
-            print(V_rtd)
-        i += 1
-
-    return V_rtd
-
-
-def pick_pseudo_random(my_list: list, my_seed: int, qty: int, replace_opt=None):
-
-    # set seed
-    np.random.seed(my_seed)
-
-    if replace_opt is None:
-        replace_opt = False
-
-    # idx_list = np.random.randint(low=0, high=last_idx, size=qty)
-    random_list = np.random.choice(my_list, qty, replace=replace_opt).tolist()
-
-    return random_list
-
-
-def random_init_pos(g, m: int, init_pos=1, my_seed=None):
-    """Choose random vertices for searchers and target
-    :param g - graph
-    :param m - number of searchers
-    :param init_pos - number of possible vertices for the target
-    :param my_seed"""
-
-    if my_seed is None:
-        my_s_seed, my_t_seed, my_seeds = None, None, None
-    else:
-        if isinstance(my_seed, dict):
-            my_s_seed = my_seed['searcher']
-            my_t_seed = my_seed['target']
-        else:
-            # old code TODO fix this later
-            my_s_seed = my_seed + 1000
-            my_t_seed = my_seed + 5000
-
-    # returns the vertex for target and searchers in model indexing (1, 2....n)
-    # not corners
-    v_target, v_possible = draw_v_random(g, init_pos, my_t_seed)
-    # uncomment here for target restricted (corners)
-    # v_target, v_possible = target_restricted(g, 4, my_t_seed)
-    v_searchers = searcher_random_pos(v_possible, m, my_s_seed)
-
-    return v_searchers, v_target
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Create graphs
-def my_graph(number_vertex: int, ref: str, graph_opt=1, deadline=None, w=None, h=None):
+def my_graph(number_vertex: int, ref: str, graph_opt=1, w=None, h=None):
     """Function to create graph according to user inputs"""
     # Graph representing environment
     # create new graph
@@ -604,16 +490,10 @@ def my_graph(number_vertex: int, ref: str, graph_opt=1, deadline=None, w=None, h
     g.add_vertices(number_vertex)
 
     if graph_opt == 1:
-        if deadline is None:
-            deadline = 8  # time steps
         g.add_edges([(0, 1), (0, 2), (1, 3), (1, 4), (2, 4), (4, 5), (5, 6)])
     elif graph_opt == 2:
-        if deadline is None:
-            deadline = 2
         g.add_edges([(0, 1), (1, 2)])
     elif graph_opt == 3:
-        if deadline is None:
-            deadline = 3  # time steps
         g.add_edges([(0, 1), (0, 2), (1, 3), (1, 4), (2, 4), (4, 5), (5, 6), (6, 7)])
     elif graph_opt == 4:
         # create graph from Hollinger 2009 - MUSEUM
@@ -716,9 +596,6 @@ def my_graph(number_vertex: int, ref: str, graph_opt=1, deadline=None, w=None, h
     V_, n = ext.get_idx_vertices(g)
     V = ext.get_set_vertices(g)[0]
 
-    if deadline is None:
-        deadline = 10
-
     # label starting at 1
     g.vs["label"] = V
 
@@ -733,7 +610,7 @@ def my_graph(number_vertex: int, ref: str, graph_opt=1, deadline=None, w=None, h
 
     # name graph
     g["name"] = ref
-    return g, deadline
+    return g
 
 
 def create_grid_graph(w: int, h: int):
@@ -742,9 +619,10 @@ def create_grid_graph(w: int, h: int):
     ref = "G" + str(n_vertex) + 'V' + '_grid'
     graph_opt = 5
     deadline = None
-    g, deadline = my_graph(n_vertex, ref, graph_opt, deadline, w, h)
+    g = my_graph(n_vertex, ref, graph_opt, w, h)
     save_graph(g, ref)
     plot_simple_graph(g)
+    save_pdf(g, ref)
 
 
 def add_edge_grid(g, w, h):
@@ -765,7 +643,8 @@ def add_edge_grid(g, w, h):
 
 def save_and_plot_graph(g, ref: str, v_searchers: list, v_target: list):
     save_graph(g, ref)
-    plot_graph(g, ref, v_searchers, v_target)
+    plot_start_config(g, ref, v_searchers, v_target)
+    save_pdf(g, ref)
 
 
 def save_graph(g, ref):
@@ -775,7 +654,7 @@ def save_graph(g, ref):
     pickle.dump(g, open(file_path, "wb"))
 
 
-def plot_graph(g, ref, v_searchers: list, v_target: list):
+def plot_start_config(g, ref, v_searchers: list, v_target: list):
     """Plot my graph and show me where the searchers started"""
 
     g.vs["color"] = "green"
@@ -786,8 +665,19 @@ def plot_graph(g, ref, v_searchers: list, v_target: list):
     for st in start_target:
         g.vs[st]["color"] = "red"
     layout = g.layout("kk")
-    name_file = "G_" + ref + ".pdf"
+    name_file = "G" + ref + ".pdf"
     plot(g, name_file, layout=layout, bbox=(300, 300), margin=20)
+
+
+def save_pdf(g, ref):
+    """Plot my graph and show me where the searchers started"""
+
+    g.vs["color"] = "gray"
+    my_layout = g.layout("kk")
+    name_file = ref + ".pdf"
+    file_path = ext.get_whole_path(name_file, 'graphs')
+
+    plot(g, file_path, layout=my_layout, bbox=(300, 300), margin=20)
 
 
 def plot_simple_graph(g, my_layout='grid'):
@@ -797,30 +687,39 @@ def plot_simple_graph(g, my_layout='grid'):
     plot(g, name_file, layout=my_layout)
 
 
-def create_papers_graph():
+def create_office_graph():
     """MESPP paper, Fig 2, first graph (MUSEUM)"""
     n_vertex = 60
     ref = 'G' + str(n_vertex) + 'V'
     graph_opt = 4
-    deadline = 10
-    g, deadline = my_graph(n_vertex, ref, graph_opt, deadline)
+    g = my_graph(n_vertex, ref, graph_opt)
     save_graph(g, ref)
 
     return g
 
 
-def create_office_graph():
+def create_museum_graph():
     """MESPP paper, Fig 2, second graph (OFFICE)"""
     n_vertex = 70
     ref = 'G' + str(n_vertex) + 'V' + '_OFFICE'
     graph_opt = 7
-    deadline = 10
-    g, deadline = my_graph(n_vertex, ref, graph_opt, deadline)
+    g = my_graph(n_vertex, ref, graph_opt)
     save_graph(g, ref)
     plot_simple_graph(g, 'kk')
 
     return g
 
 
+def create_graph_test():
+    n_vertex = 7
+    ref = 'G' + str(n_vertex) + 'V'
+    graph_opt = 1
+    g = my_graph(n_vertex, ref, graph_opt)
+    save_graph(g, ref)
+    save_pdf(g, ref)
+
+
 if __name__ == "__main__":
-    create_grid_graph(3, 3)
+    create_graph_test()
+
+
