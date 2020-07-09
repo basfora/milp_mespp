@@ -1,31 +1,27 @@
-import pytest
-from igraph import *
-import numpy as np
-
 from core import extract_info as ext
 from core import create_parameters as cp
-from core import construct_model as cm
 
 
 def test_belief_vector():
     """Test b_0 for vertices with equal probability"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
+    v_list = [5]
+    type_distribution = 'uniform'
 
-    v_target_init = [5]
-    b_0, M = cp.my_target_motion(g, v_target_init)
+    b_0 = cp.set_initial_belief(g, v_list, type_distribution)
     assert b_0 == [0, 0, 0, 0, 0, 1, 0, 0]
 
-    v_target_init = [1, 7]
-    b_0, M = cp.my_target_motion(g, v_target_init)
+    v_list = [1, 7]
+    b_0 = cp.set_initial_belief(g, v_list, type_distribution)
     assert b_0 == [0, 1/2, 0, 0, 0, 0, 0, 1/2]
 
 
 def test_belief_vector_prob():
     """Test b_0 for several vertices, user defined probability"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
 
     v_target_init = [1, 5, 7]
@@ -37,7 +33,7 @@ def test_belief_vector_prob():
 def test_markovian_matrix():
     """Test Markovian matrix M for random motion"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
 
     v_target_init = [1, 5, 7]
@@ -65,16 +61,28 @@ def test_capture_range():
     v_target = [1, 2, 3]
     v_searchers = [5]
     target_motion = 'random'
-    belief_distribution = 'uniform'
+    distribution_type = 'uniform'
     capture_range = 1
     zeta = None
 
-    b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution,
-                                                capture_range, zeta)
-    s = 1
+    b_0 = cp.set_initial_belief(g, v_target, distribution_type)
+    M = cp.my_motion_matrix(g, target_motion)
+
+    assert b_0[0] == 0.0
+    assert b_0[1] == 1/3
+    assert b_0[2] == 1/3
+    assert b_0[3] == 1/3
+
+    assert M[0][0] == 1/3
+    assert M[-1][-1] == 1/3
+
+    searchers = cp.create_my_searchers(g, v_searchers, capture_range, zeta)
+
+    s_id = 1
     u = 1
 
-    C = cm.get_capture_matrix(searchers_info, s, u)
+    s = searchers[s_id]
+    C = s.get_capture_matrix(u)
 
     assert C[0][0] == 1
     assert C[1][0] == 1
@@ -117,6 +125,3 @@ def test_check_reachability():
     assert init_is_ok1 is True
     assert init_is_ok2 is True
     assert init_is_ok2 is True
-
-
-

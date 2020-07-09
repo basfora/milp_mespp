@@ -8,14 +8,14 @@ from gurobipy import *
 def test_add_searcher_variables_x():
     """Test for expected X in simple graph"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
-    v0 = [3, 1]
+    v0_searchers = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
     md = Model("my_model")
 
@@ -45,14 +45,14 @@ def test_add_searcher_variables_x():
 def test_add_searcher_variables_y():
     """Test for expected Y in simple graph"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
-    v_searchers = [3, 1]
+    v0_searchers = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v_searchers)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
     md = Model("my_model")
 
@@ -74,7 +74,7 @@ def test_add_searcher_variables_y():
 def test_add_target_variables_b():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     deadline = 3
 
@@ -95,7 +95,7 @@ def test_add_target_variables_b():
 def test_add_target_variables_alpha():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     deadline = 3
 
@@ -115,14 +115,14 @@ def test_add_target_variables_alpha():
 def test_get_var():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
-    v0 = [3, 1]
+    v0_searchers = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
     md = Model("my_model")
     # time indexes
@@ -143,3 +143,90 @@ def test_get_var():
     assert my_chosen_var == searchers_vars.get('x')
     assert my_empty_var is None
 
+
+def test_position_searchers():
+    # load graph
+    graph_file = 'G7V7E.p'
+    g = ext.get_graph(graph_file)
+    # input for target initial vertices (belief)
+    v_target = [7]
+    # initial searcher vertices
+    v0_searchers = [1, 2]
+    horizon = 3
+    # type of motion
+    target_motion = 'random'
+    belief_distribution = 'uniform'
+    b0, M = cp.my_target_motion(g, v_target, belief_distribution, target_motion)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0_searchers)
+
+    # solve
+    # create model
+    md = Model("my_model")
+
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers)
+
+    # add variables
+    my_vars = mf.add_variables(md, g, horizon, start, vertices_t, )
+
+    # add constraints (central algorithm)
+    mf.add_constraints(md, g, my_vars, searchers, vertices_t, horizon, b0, M)
+
+    mf.set_solver_parameters(md, 0.99, horizon, my_vars)
+
+    md.update()
+    # Optimize model
+    md.optimize()
+
+    x_s, b_target = mf.query_variables(md)
+
+    # check searcher position (1)
+    assert x_s.get((1, 1, 0)) == 1
+    assert x_s.get((1, 3, 1)) == 1
+    assert x_s.get((1, 5, 2)) == 1
+    assert x_s.get((1, 6, 3)) == 1
+    # check searcher position (2)
+    assert x_s.get((2, 2, 0)) == 1
+    assert x_s.get((2, 5, 1)) == 1
+    assert x_s.get((2, 6, 2)) == 1
+    assert x_s.get((2, 7, 3)) == 1
+
+    # check target belief t = 0
+    assert b_target.get((0, 0)) == 0
+    assert b_target.get((1, 0)) == 0
+    assert b_target.get((2, 0)) == 0
+    assert b_target.get((3, 0)) == 0
+    assert b_target.get((4, 0)) == 0
+    assert b_target.get((5, 0)) == 0
+    assert b_target.get((6, 0)) == 0
+    assert b_target.get((7, 0)) == 1
+
+    # check target belief t = 1
+    assert b_target.get((0, 1)) == 0
+    assert b_target.get((1, 1)) == 0
+    assert b_target.get((2, 1)) == 0
+    assert b_target.get((3, 1)) == 0
+    assert b_target.get((4, 1)) == 0
+    assert b_target.get((5, 1)) == 0
+    assert b_target.get((6, 1)) == 0.5
+    assert b_target.get((7, 1)) == 0.5
+
+    # check target belief t = 2
+    assert round(b_target.get((0, 2)), 3) == 0.583
+    assert b_target.get((1, 2)) == 0
+    assert b_target.get((2, 2)) == 0
+    assert b_target.get((3, 2)) == 0
+    assert b_target.get((4, 2)) == 0
+    assert b_target.get((5, 2)) == 0
+    assert b_target.get((6, 2)) == 0
+    assert round(b_target.get((7, 2)), 3) == 0.417
+
+    # check target belief t = 3
+    assert b_target.get((0, 3)) == 1
+    assert b_target.get((1, 3)) == 0
+    assert b_target.get((2, 3)) == 0
+    assert b_target.get((3, 3)) == 0
+    assert b_target.get((4, 3)) == 0
+    assert b_target.get((5, 3)) == 0
+    assert b_target.get((6, 3)) == 0
+    assert b_target.get((7, 3)) == 0

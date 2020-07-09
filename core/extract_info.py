@@ -28,15 +28,16 @@ def get_set_searchers(info_input):
     if isinstance(info_input, list):
         m = len(info_input)
         S = list(range(1,  m + 1))
+
     elif isinstance(info_input, dict):
         my_keys = [k for k in info_input.keys()]
-        if len(my_keys[0]) == 1:
+        if isinstance(my_keys[0], int):
             # searchers[s]
-            S = list(info_input.keys())
+            S = list(my_keys)
             m = len(S)
         else:
             # x_s(s, v, t)
-            m = get_m(info_input)
+            m = get_m_from_tuple(info_input)
             S = list(range(1, m+1))
 
     elif isinstance(info_input, int):
@@ -47,6 +48,21 @@ def get_set_searchers(info_input):
         m = None
         S = None
     return S, m
+
+
+def get_m_from_tuple(my_dict: dict):
+    """Get number of searchers from
+    triple tuple (s, v, t) or path(s, t)
+    UT-OK"""
+
+    x_keys = my_dict.keys()
+
+    # list of s
+    s_in_keys = [k[0] for k in x_keys]
+    # max s
+    m = max(s_in_keys)
+
+    return m
 
 
 def get_set_time(deadline):
@@ -97,17 +113,17 @@ def get_set_ext_vertices(g):
     return V_ext
 
 
-def get_start_set(searchers: dict):
+def get_position_list(searchers: dict):
 
     start = []
 
-    # TODO take out s_info once code is clean
     # s_info or searchers
     for s_id in searchers.keys():
         s = searchers[s_id]
 
         # old form, extract from s_info
         if isinstance(s, dict):
+            # TODO take out s_info once code is clean
             start_s = s["start"]
         else:
             start_s = s.current_pos
@@ -708,10 +724,17 @@ def get_graph(graph_name):
     return G
 
 
+def get_graph_00():
+    """Load G7V7E test graph"""
+    graph_file = 'G7V7E.p'
+    g = get_graph(graph_file)
+
+    return g
+
+
 def get_graph_01():
-    """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
+    """Load Hollinger, 2009 middle graph from Fig 2 OFFICE"""
     graph_name = 'G60V.p'
-    # graph_file = get_whole_path(graph_name, 'graphs')
     g = get_graph(graph_name)
     g["name"] = graph_name
 
@@ -764,7 +787,7 @@ def get_graph_06():
 
 
 def get_graph_07():
-    """Load Hollinger, 2009 middle graph from Fig 2 OFFICE"""
+    """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
     graph_name = 'G70V_OFFICE.p'
     g = get_graph(graph_name)
     g["name"] = graph_name
@@ -828,21 +851,6 @@ def get_h(my_dict: dict):
     t = max(all_t)
 
     return t
-
-
-def get_m(my_dict: dict):
-    """Get number of searchers from
-    triple tuple (s, v, t) or path(s, t)
-    UT-OK"""
-
-    x_keys = my_dict.keys()
-
-    # list of s
-    s_in_keys = [k[0] for k in x_keys]
-    # max s
-    m = max(s_in_keys)
-
-    return m
 
 
 def create_2tuple_keys(list1, list2):
@@ -956,6 +964,7 @@ def get_zeta_s(zeta, s):
 
 def this_folder(name_folder, parent_folder='data'):
 
-    f_path = ext.get_whole_path(name_folder, parent_folder)
+    f_path = get_whole_path(name_folder, parent_folder)
 
     return f_path
+

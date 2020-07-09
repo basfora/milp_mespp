@@ -1,38 +1,36 @@
 import pytest
 
-import core.extract_info
-import core.plan_fun
+from core import plan_fun as pln
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
-from core import sim_fun as sf
 import numpy as np
 
 
 def test_get_vertices_and_steps_start():
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
-    v0 = [3, 1]
+    v0_searchers = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
-    assert start[0] == v0[0]
-    assert start[1] == v0[1]
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
+    assert start[0] == v0_searchers[0]
+    assert start[1] == v0_searchers[1]
 
 
 def test_get_vertices_and_steps_vertices():
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     v0 = [1, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert vertices_t.get((1, 0)) == [1]
     assert vertices_t.get((1, 1)) == [1, 2, 3]
     assert vertices_t.get((1, 2)) == [1, 2, 3, 4, 5]
@@ -41,14 +39,14 @@ def test_get_vertices_and_steps_vertices():
 
 def test_get_vertices_and_steps_vertices2():
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     v0 = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert vertices_t.get((1, 0)) == [3]
     assert vertices_t.get((1, 1)) == [1, 3,  5]
     assert vertices_t.get((1, 2)) == [1, 2, 3, 5, 6]
@@ -57,14 +55,14 @@ def test_get_vertices_and_steps_vertices2():
 
 def test_get_vertices_and_steps_times():
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     v0 = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert times_v.get((1, 1)) == [1, 2, 3]
     assert times_v.get((1, 2)) == [2, 3]
     assert times_v.get((1, 3)) == [0, 1, 2, 3]
@@ -80,13 +78,13 @@ def test_get_vertices_and_steps_distributed():
     g = ext.get_graph(graph_file)
     v0 = [1, 2]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0)
 
-    temp_s_path = core.plan_fun.init_temp_path(searchers_info, deadline)
+    temp_s_path = pln.init_temp_path(searchers, deadline)
     temp_s_path['current_searcher'] = 1
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps_distributed(g, deadline, searchers_info, temp_s_path)
+    start, vertices_t, times_v = cm.get_vertices_and_steps_distributed(g, deadline, searchers, temp_s_path)
 
     assert times_v.get((1, 1)) == [0, 1, 2, 3]
     assert times_v.get((1, 2)) == [1, 2, 3]
@@ -121,21 +119,21 @@ def test_get_vertices_and_steps_distributed():
 
 def test_neighbors():
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
 
     v0 = [3, 1]
     deadline = 3
-    # searchers info
-    searchers_info = cp.my_searchers_info(g, v0)
+    # searchers
+    searchers = cp.create_my_searchers(g, v0)
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
     s = 1
     v = 3
     t = 2
-    Tau_ext = ext.get_set_ext_time(deadline)
-    v_possible = cm.get_next_vertices(g, s, v, t, vertices_t, Tau_ext)
+    tau_ext = ext.get_set_ext_time(deadline)
+    v_possible = cm.get_next_vertices(g, s, v, t, vertices_t, tau_ext)
 
     assert v_possible == [1, 5, 3]
 
@@ -144,11 +142,11 @@ def test_neighbors():
 def test_assemble_big_matrix():
     """test assemble of [1, 0; 0, M]"""
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     big_M = cm.assemble_big_matrix(n, M)
 
-    bigM = core.extract_info.convert_list_array(big_M, 'list')
+    bigM = ext.convert_list_array(big_M, 'list')
 
     assert isinstance(bigM, list)
     assert bigM[0][0] == 1
@@ -178,7 +176,7 @@ def test_assemble_big_matrix2():
     # input parameters for graph
     n_vertex = 7
 
-    graph_name = 'G_7V7E.p'
+    graph_name = 'G7V7E.p'
     g = ext.get_graph(graph_name)
 
     # input for target initial vertices (belief)
@@ -191,7 +189,7 @@ def test_assemble_big_matrix2():
 
     big_M = cm.assemble_big_matrix(n_vertex, M)
 
-    bigM = core.extract_info.convert_list_array(big_M, 'list')
+    bigM = ext.convert_list_array(big_M, 'list')
 
     assert isinstance(bigM, list)
     assert bigM[0][0] == 1
@@ -224,11 +222,11 @@ def test_change_type():
     A1 = np.array([[1, 2], [3, 4]])
     A2 = [1, 2, 3, 4, 5]
 
-    B1 = core.extract_info.convert_list_array(A1, 'list')
-    B2 = core.extract_info.convert_list_array(A2, 'array')
+    B1 = ext.convert_list_array(A1, 'list')
+    B2 = ext.convert_list_array(A2, 'array')
 
-    B3 = core.extract_info.convert_list_array(A1, 'array')
-    B4 = core.extract_info.convert_list_array(A2, 'list')
+    B3 = ext.convert_list_array(A1, 'array')
+    B4 = ext.convert_list_array(A2, 'list')
 
     assert isinstance(B1, list)
     assert isinstance(B2, np.ndarray)
@@ -246,7 +244,7 @@ def test_sample_vertex():
     N = 10000
     i = 0
     while i < N:
-        my_vertex = core.extract_info.sample_vertex(my_vertices, prob_move)
+        my_vertex = ext.sample_vertex(my_vertices, prob_move)
         if my_vertex == 1:
             count1 = count1 + 1
         elif my_vertex == 2:
@@ -262,7 +260,7 @@ def test_sample_vertex():
 
 def test_probability_move():
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     prob_v = {}
     v = {}
@@ -288,64 +286,65 @@ def test_probability_move():
 def test_product_capture_matrix():
 
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     # initial searcher vertices
     v_searchers = [1]
     # type of motion
     target_motion = 'random'
     belief_distribution = 'uniform'
-    searchers_info = cp.my_searchers_info(g, v_searchers)
+    # searchers
+    searchers = cp.create_my_searchers(g, v_searchers)
 
     s = 1
     v = 1
     t = 0
 
-    C1 = cm.get_capture_matrix(searchers_info, s, v)
+    C1 = searchers[s].get_capture_matrix(v)
 
-    new_pos = {}
+    new_pos = dict()
     new_pos[s] = v
 
-    prod_C = cm.product_capture_matrix(searchers_info, new_pos, 7)
+    prod_C = cm.product_capture_matrix(searchers, new_pos, 7)
 
     assert prod_C.all() == C1.all()
 
 
 def test_product_capture_matrix2():
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
-    C1 = cm.get_capture_matrix(searchers_info, 1, 1)
-    C2 = cm.get_capture_matrix(searchers_info, 2, 2)
+    C1 = cm.get_capture_s(searchers, 1, 1)
+    C2 = cm.get_capture_s(searchers, 2, 2)
     correct_prod = C1 * C2
 
-    new_pos = {}
+    new_pos = dict()
     new_pos[1] = 1
     new_pos[2] = 2
     t = 0
 
-    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+    prod_C = cm.product_capture_matrix(searchers, new_pos, n)
 
     assert prod_C.all() == correct_prod.all()
 
 
 def test_belief_update_equation():
 
-    n, b_0, M, searchers_info = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     new_pos = dict()
     new_pos[1] = 1
     new_pos[2] = 2
 
     # find the product of the capture matrices, s = 1...m
-    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+    prod_C = cm.product_capture_matrix(searchers, new_pos, n)
 
     # assemble the matrix for multiplication
     big_M = cm.assemble_big_matrix(n, M)
 
     new_belief = cm.belief_update_equation(b_0, big_M, prod_C)
 
-    init_belief = core.extract_info.convert_list_array(b_0, 'array')
+    init_belief = ext.convert_list_array(b_0, 'array')
     my_belief = init_belief.dot(big_M).dot(prod_C)
 
     my_belief = my_belief.tolist()
@@ -381,7 +380,7 @@ def test_get_true_position():
 def parameters_7v_random_motion():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]
@@ -392,30 +391,10 @@ def parameters_7v_random_motion():
     target_motion = 'random'
     belief_distribution = 'uniform'
     # initialize parameters
-    b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
+    b_0 = cp.set_initial_belief(g, v_target, belief_distribution)
+    M = cp.my_motion_matrix(g, target_motion)
+    searchers = cp.create_my_searchers(g, v_searchers)
+
     n = 7
-    return n, b_0, M, searchers_info
+    return n, b_0, M, searchers
 
-
-
-
-
-
-
-
-# def test_3vertices_var_x():
-#     # load graph
-#     graph_file = 'G_3V3E.p'
-#     g = cm.get_graph(graph_file)
-#     # input for target initial vertices (belief)
-#     v_target = [3]
-#     deadline = 2
-#     b_0, M = cp.my_target_motion(g, v_target, None, 'static')
-#     # initial searcher vertices
-#     v_searchers = [1]
-#     searchers_info = cp.my_searchers_info(g, v_searchers)
-#
-#
-#
-#     # model
-#     # mf.solve_model(g, deadline, searchers_info, b_0, M)

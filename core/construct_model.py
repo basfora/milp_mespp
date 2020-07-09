@@ -10,11 +10,11 @@ import numpy as np
 
 
 # V(s,t)
-def get_vertices_and_steps(G, deadline, searchers_info):
+def get_vertices_and_steps(G, deadline, searchers):
     """Extract information from the user provided graph and information on searchers
     For each time step, find which vertices each searcher is allowed to be"""
 
-    start = ext.get_start_set(searchers_info)
+    start = ext.get_position_list(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
     Tau = ext.get_set_time(deadline)
@@ -66,12 +66,12 @@ def get_vertices_and_steps(G, deadline, searchers_info):
     return start, vertices_t, times_v
 
 
-def get_vertices_and_steps_distributed(G, deadline, searchers_info, temp_s_path):
+def get_vertices_and_steps_distributed(G, deadline, searchers, temp_s_path):
     """Extract information from the user provided graph and information on searchers
        For each time step, find which vertices each searcher is allowed to be
        Since this is the distributed version, use info on temporary searchers path (temp_s_path)"""
 
-    start = ext.get_start_set(searchers_info)
+    start = ext.get_position_list(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
     Tau = ext.get_set_time(deadline)
@@ -182,38 +182,40 @@ def get_previous_vertices(g, s: int, v: int, t: int, vertices_t: dict):
 
 
 # Capture events: matrices and checks
-def get_u_for_capture(searchers_info: dict, V: list,  v: int):
-    """Return a list with the searchers vertex u that could capture the target placed at v"""
+def get_u_for_capture(searchers: dict, V: list, v: int):
+    """Return a list with the all searchers vertex u that could capture the target placed at v"""
     my_list = []
-    for s in searchers_info.keys():
+    for s_id in searchers.keys():
+        s = searchers[s_id]
         for u in V:
             # get capture matrix
-            C = get_capture_matrix(searchers_info, s, u)
+            C = s.get_capture_matrix(u)
             if check_capture(C, v) and u not in my_list:
                 my_list.append(u)
     return my_list
 
 
-def get_capture_matrix(searchers: dict, s, u):
-    """get capture matrices from searchers_info"""
-    c_matrices = get_all_capture_matrices(searchers, s)
-    C = c_matrices.get(u)
+def get_capture_s(searchers: dict, s_id, u):
+    """get capture matrices from a single searcher"""
+    s = searchers[s_id]
+    C = s.get_capture_matrix(u)
     return C
 
 
-def get_all_capture_matrices(searchers: dict, s_id):
-    """get capture matrices from searchers (s_info or searchers class)"""
+def get_all_capture_s(searchers: dict, s_id):
+    """get capture matrices from searchers (s_info or searchers class)
+    for a single searcher s"""
     # get s
     s = searchers[s_id]
 
-    # TODO take out s_info once code is clean
     # s_info or searchers
     if isinstance(s, dict):
+        # TODO take out s_info once code is clean
         # old form, extract from s_info
         c_matrices = s.get('c_matrix')
     else:
         # new, extract from class MySearcher
-        c_matrices = s.capture_matrices
+        c_matrices = s.get_all_capture_matrices()
 
     return c_matrices
 
@@ -235,7 +237,7 @@ def check_false_negatives(searchers: dict):
     # get capture matrices from first searcher, first vertex (assume the other will be the same type)
     s = 1
     u = 1
-    C = get_capture_matrix(searchers, s, u)
+    C = get_capture_s(searchers, s, u)
 
     # check if it's float
     if C.dtype.type == np.float64:
@@ -258,13 +260,14 @@ def product_capture_matrix(searchers: dict, pi_next_t: dict, n: int):
     C = {}
     prod_C = np.identity(nu)
     # get capture matrices for each searcher that will be at pi(t+1)
-    for s in searchers.keys():
+    for s_id in searchers.keys():
+        s = searchers[s_id]
         # get where the searchers is now
-        v = pi_next_t.get(s)
+        v = pi_next_t.get(s_id)
         # extract the capture matrix for that vertex
-        C[s] = get_capture_matrix(searchers, s, v)
+        C[s_id] = s.get_capture_matrix(v)
         # recursive product of capture matrix, from 1...m searchers
-        prod_C = np.matmul(prod_C, C[s])
+        prod_C = np.matmul(prod_C, C[s_id])
 
     return prod_C
 

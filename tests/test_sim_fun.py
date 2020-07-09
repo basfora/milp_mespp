@@ -1,74 +1,141 @@
-import core.plan_fun
+from core import plan_fun as pln
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext
 from core import milp_fun as mf
 from core import sim_fun as sf
+from classes.inputs import MyInputs
 from gurobipy import *
-from core.deprecated import pre_made_inputs as pmi
 
 
+# TODO fix these two things
 def parameters_sim():
-    sim_param = 1
-    inputs_opt = 1
-    today_run = 0
-    gamma = 1.5
-    milp_opt = 'central'
 
-    horizon, theta, deadline, solver_type = pmi.get_sim_param(sim_param)
-    # GET parameters for the MILP solver
-    # get horizon, graph etc according to inputs_opt parameter (pre-made inputs)
-    g, v0_target, v0_searchers, target_motion, belief_distribution = pmi.get_inputs(inputs_opt)
+    today_run = 0
+    gamma = 0.99
+    theta = 2
+    deadline = 6
+    horizon = 3
+    solver_type = 'central'
+
+    graph_file = 'G7V7E.p'
+    g = ext.get_graph(graph_file)
+    target_motion = 'random'
+    belief_distribution = 'uniform'
+
+    v0_target = [7]
+    v0_searchers = [1, 2]
 
     return theta, deadline, solver_type, horizon, g, v0_target, v0_searchers, target_motion, belief_distribution
 
 
-def output_inputs():
+def get_solver_param(sim_param=1):
+    """Get parameters related to this simulation run"""
+
+    theta = None
+    deadline = None
+    horizon = None
+    solver_type = None
+
+    if sim_param == 1:
+        theta = 2
+        deadline = 6
+        horizon = 3
+        solver_type = 'central'
+    elif sim_param == 2:
+        theta = 3
+        deadline = 6
+        horizon = 3
+        solver_type = 'central'
+    elif sim_param == 3:
+        theta = 3
+        deadline = 6
+        horizon = 3
+        solver_type = 'distributed'
+    elif sim_param == 4:
+        theta = 10
+        deadline = 10
+        horizon = 10
+        solver_type = 'central'
+    elif sim_param == 5:
+        theta = 20
+        deadline = 20
+        horizon = 20
+        solver_type = 'central'
+    else:
+        print("No other options available at this time")
+        exit()
+
+    return horizon, theta, deadline, solver_type
+
+
+def my_specs():
+    theta, deadline, solver_type, horizon, g, v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()
+
+    specs = MyInputs()
+
+    specs.set_theta(theta)
+    specs.set_deadline(deadline)
+    specs.set_solver_type(solver_type)
+    specs.set_horizon(horizon)
+    specs.set_graph(0)
+    specs.set_start_target_list(v0_target)
+    specs.set_start_searchers(v0_searchers)
+    specs.set_target_motion(target_motion)
+    specs.set_belief_distribution(belief_distribution)
+
+    return specs
+
+
+# ---------------------------------------
+def test_inputs():
+    theta, deadline, solver_type, horizon, g, v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()
+
+    specs = MyInputs()
+
+    specs.set_theta(theta)
+    specs.set_deadline(deadline)
+    specs.set_solver_type(solver_type)
+    specs.set_horizon(horizon)
+    specs.set_graph(0)
+    specs.set_start_target_list(v0_target)
+    specs.set_start_searchers(v0_searchers)
+    specs.set_target_motion(target_motion)
+    specs.set_belief_distribution(belief_distribution)
+
+    assert g["name"] == specs.graph["name"]
+    assert specs.horizon == horizon
+    assert specs.theta == theta
+    assert specs.start_target_random is False
+    assert specs.start_target_true == v0_target[0]
+    assert specs.start_searcher_random is False
+    assert specs.start_searcher_v == v0_searchers
+    assert specs.target_motion == target_motion
+    assert specs.belief_distribution == belief_distribution
+
+
+def test_init_wrapper():
+    # TODO check
+    # belief = cp.create_belief(specs) > v_list = placement_list(specs, 't') >
+    # out_of_reach = check_reachability(g, specs.capture_range, v_list, v_taken) >
+    # distance = ext.get_node_distance(g, vt, v) > distance = spl[v1_idx][v2_idx]
+    # ERROR list indices must be integers or slices, not list
+
+
     horizon = parameters_sim()[3]
-    deadline = parameters_sim()[1]
-    g = parameters_sim()[4]
-    v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()[5:10]
-
-    # get sets for easy iteration
-    S, V, n, Tau = ext.get_sets_only(v0_searchers, deadline, g)
-
-    # ________________________________________________________________________________________________________________
-
-    # INITIALIZE
-
-    # initialize parameters according to inputs
-    b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
-
-    theta = 3
-
-    # initialize instances of classes (initial target and searchers locations)
-    belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info,
-                                                              v0_target, M)
-
-    searchers = cp.create_my_searchers(g, v0_searchers)
-
-    return belief, target, searchers, sim_data, b_0, M, searchers_info
-
-
-def test_init_all_classes():
-    horizon = 3
     deadline = parameters_sim()[1]
     g = parameters_sim()[4]
     v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()[5:9]
 
-    # get sets for easy iteration
-    S, V, n, Tau = ext.get_sets_only(v0_searchers, deadline, g)
-
+    # initialize parameters according to inputs
+    b_0 = cp.set_initial_belief(g, v0_target, belief_distribution)
+    M = cp.my_motion_matrix(g, target_motion)
+    searchers_ = cp.create_my_searchers(g, v0_searchers)
     # ________________________________________________________________________________________________________________
 
-    # INITIALIZE
-
-    # initialize parameters according to inputs
-    b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
-    searchers = cp.create_my_searchers(g, v0_searchers)
-
-    # initialize instances of classes (initial target and searchers locations)
-    belief, target, sim_data = sf.init_all_classes(horizon, deadline, 2, g, 'central', b_0, searchers_info, v0_target, M)
+    specs = my_specs()
+    # initialize instances of classes
+    belief, searchers, solver_data, target = pln.init_wrapper(specs)
 
     assert belief.stored[0] == b_0
     assert belief.milp_init_belief == b_0
@@ -83,55 +150,94 @@ def test_init_all_classes():
 
     counter_s = 1
     for s_id in searchers.keys():
+        idx = s_id - 1
         s = searchers[s_id]
         assert s.id == s_id
-        assert s.start == searchers_info[s_id]['start']
+        assert s.start == v0_searchers[idx]
         assert s.start in set(v0_searchers)
-        assert all(s.capture_matrices) == all(searchers_info[s_id]['c_matrix'])
+        assert all(s.capture_matrices) == all(searchers_[s_id].capture_matrices)
         assert len(s.path_planned) == 0
-        assert s.path_taken[0] == searchers_info[s_id]['start']
+        assert s.path_taken[0] == searchers_[s_id].start
         counter_s = counter_s + 1
 
-    assert sim_data.solver_type == 'central'
-    assert sim_data.theta == 2
-    assert sim_data.horizon[0] == horizon
-    assert sim_data.deadline == deadline
+    assert solver_data.solver_type == 'central'
+    assert solver_data.theta == 2
+    assert solver_data.horizon[0] == horizon
+    assert solver_data.deadline == deadline
 
 
 def test_update_start_searchers():
 
-    searchers_info = output_inputs()[-1]
+    # initial
+    horizon = parameters_sim()[3]
+    g = parameters_sim()[4]
+    v0_searchers = parameters_sim()[5]
+    searchers = cp.create_my_searchers(g, v0_searchers)
 
-    current_pos = {}
-    current_pos[1] = 10
-    current_pos[2] = 11
+    # fake position
+    fake_pos = dict()
+    fake_pos[1] = 10
+    fake_pos[2] = 11
 
-    searchers_info = sf.update_start_info(searchers_info, current_pos)
-    for s_id in searchers_info.keys():
-        assert searchers_info[s_id]['start'] == current_pos[s_id]
+    # update searcher position
+    searchers = pln.searchers_next_position(searchers, fake_pos)
+
+    pos_list = ext.get_position_list(searchers)
+    for s_id in searchers.keys():
+        assert pos_list[s_id - 1] == fake_pos[s_id]
+        assert searchers[s_id].current_pos == fake_pos[s_id]
 
 
-def test_run_solver_get_model_data():
-    horizon, theta, _, solver_type = pmi.get_sim_param()
+def test_check_false_negative():
 
-    # GET parameters for the MILP solver
-    # get horizon, graph etc according to inputs_opt parameter (pre-made inputs)
-    g, v0_target, v0_searchers, target_motion, belief_distribution = pmi.get_inputs()
+    deadline = parameters_sim()[1]
+    g = parameters_sim()[4]
+    v0_searchers = parameters_sim()[6]
+
+    # no false negatives
+    searchers = cp.create_my_searchers(g, v0_searchers)
+    false_neg = cm.check_false_negatives(searchers)[0]
 
     # ________________________________________________________________________________________________________________
 
-    # INITIALIZE
+    # initialize parameters according to inputs
+    capture_range = 0
+    zeta = 0.2
+    searchers_2 = cp.create_my_searchers(g, v0_searchers, capture_range, zeta)
+    false_neg_2, zeta2 = cm.check_false_negatives(searchers_2)
+
+    assert false_neg is False
+    assert false_neg_2 is True
+    assert zeta2 == zeta
+
+
+# --------------------------------------------------------------------------------------
+
+
+def test_run_solver_get_model_data():
+
+    horizon = parameters_sim()[3]
+    deadline = parameters_sim()[1]
+    g = parameters_sim()[4]
+    v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()[5:9]
 
     # initialize parameters according to inputs
-    b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution)
+    b_0 = cp.set_initial_belief(g, v0_target, belief_distribution)
+    M = cp.my_motion_matrix(g, target_motion)
+    searchers_ = cp.create_my_searchers(g, v0_searchers)
 
-    # solve inside run_solver
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = core.plan_fun.run_solver(g, horizon, searchers_info, b_0, M)
-
-    # solve manually
+    # solve: 1
     results, md1 = mf.run_gurobi(g, horizon, searchers_info, b_0, M, 0.99)
     x, b = mf.query_variables(md1)
     obj_fun1, time_sol1, gap1, threads1 = mf.get_model_data(md1)
+
+    # solve: 2
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, searchers_info, b_0, M)
+
+    # solve: 3
+    specs = my_specs()
+    # initialize instances of classes
+    path = pln.run_default_planner(specs)
 
     assert x == x_searchers
     assert b == b_target
@@ -150,7 +256,7 @@ def test_run_solver_get_model_data():
 def test_get_positions_searchers():
 
     # GET parameters for the simulation, according to sim_param
-    horizon, theta, deadline, solver_type = pmi.get_sim_param()
+    horizon, theta, deadline, solver_type = pmi.get_solver_param()
 
     # GET parameters for the MILP solver
     # get horizon, graph etc according to inputs_opt parameter (pre-made inputs)
@@ -211,7 +317,7 @@ def test_get_positions_searchers():
 
 def test_time_consistency():
     # GET parameters for the simulation, according to sim_param
-    horizon, theta, deadline, solver_type = pmi.get_sim_param()
+    horizon, theta, deadline, solver_type = pmi.get_solver_param()
 
     # GET parameters for the MILP solver
     # get horizon, graph etc according to inputs_opt parameter (pre-made inputs)
@@ -276,32 +382,6 @@ def test_time_consistency():
 
     assert t1 == t2
     assert t1 == t
-
-
-def test_check_false_negative():
-
-    s_info = output_inputs()[-1]
-
-    false_neg = cm.check_false_negatives(s_info)[0]
-
-    deadline = parameters_sim()[1]
-    horizon, g = parameters_sim()[3:5]
-    v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()[5:9]
-
-    # ________________________________________________________________________________________________________________
-
-    # initialize parameters according to inputs\
-    capture_range = 0
-    zeta = 0.2
-
-    b_0, M, searchers_info = cp.init_parameters(g, v0_target, v0_searchers, target_motion, belief_distribution,
-                                                capture_range, zeta)
-
-    false_neg_2, zeta2 = cm.check_false_negatives(searchers_info)
-
-    assert false_neg is False
-    assert false_neg_2 is True
-    assert zeta2 == zeta
 
 
 

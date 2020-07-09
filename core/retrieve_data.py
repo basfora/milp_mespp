@@ -7,12 +7,13 @@ import os
 import pickle
 import numpy as np
 
+from scipy.stats import sem as sem_sp, t as t_sp, mean as mean_sp
+
 this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(this_path)
 
 from classes.belief import MyBelief
 from core import extract_info as ext
-from experiments import plot_gen_simple as pg
 
 """start.txt : 
 1st line, planning horizon; 2nd line, the discount factor; 3rd line, the number of graph vertices; 
@@ -1042,6 +1043,28 @@ def create_txt(name_folder):
     belief, target, searchers, solver_data, exp_inputs = get_classes(data)
 
     organize_data_make_files(belief, target, searchers, solver_data, exp_inputs, my_path)
+
+
+def get_confidence(some_list: list):
+    """Get confidence interval of 95%"""
+
+    confidence = 0.68
+
+    m = []
+    y_err = []
+    max_j = len(some_list)
+
+    for i in range(0, max_j):
+        n = len(some_list[i])
+        m_i = mean_sp(some_list[i][:])
+        std_err = sem_sp(some_list[i][:])
+        h = std_err * t_sp.ppf((1 + confidence) / 2, n - 1)
+
+        m.append(m_i)
+        y_err.append(h)
+
+    return m, y_err
+
 
 
 if __name__ == "__main__":

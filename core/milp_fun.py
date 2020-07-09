@@ -38,7 +38,7 @@ def add_constraints(md, g, my_vars: dict, searchers: dict, vertices_t: dict, dea
     :param g
     """
 
-    start = ext.get_start_set(searchers)
+    start = ext.get_position_list(searchers)
 
     # searchers motion
     add_searcher_constraints(md, g, my_vars, start, vertices_t, deadline)
@@ -446,7 +446,7 @@ def enforce_binary(x_searchers, t_max):
 
     old_x_searchers = x_searchers
 
-    m = ext.get_m(x_searchers)
+    m = ext.get_m_from_tuple(x_searchers)
     S = ext.get_set_searchers(m)[0]
 
     x_keys = old_x_searchers.keys()

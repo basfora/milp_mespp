@@ -50,7 +50,7 @@ def plot_all_steps(g, name_folder: str, x_searchers: dict, b_target: dict, deadl
 def plot_searchers_position(g, folder_name, my_layout, x_searchers: dict, t: int):
     """plot results of searchers position"""
 
-    m = ext.get_m(x_searchers)
+    m = ext.get_m_from_tuple(x_searchers)
 
     V, n = ext.get_set_vertices(g)
     S = ext.get_set_searchers(m)[0]

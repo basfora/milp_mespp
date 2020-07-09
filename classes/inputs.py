@@ -51,6 +51,12 @@ class MyInputs:
         self.start_target_true = None
         self.start_target_v_list = None
 
+        # variables for iteration
+        self.today_run = 1
+        self.searcher_seed = 0
+        self.target_seed = 0
+        self.name_folder = ''
+
         # Monte Carlo Sim
         # first run of the day
         self.start_day = datetime.datetime.today().day
@@ -58,16 +64,14 @@ class MyInputs:
         self.runs_per_m = 20
         self.list_turns = list(range(self.today_run - 1, self.runs_per_m))
 
-        # variables for iteration
-        self.today_run = 1
-        self.searcher_seed = 0
-        self.target_seed = 0
-        self.name_folder = ''
 
-    def get_graph(self, graph_number: int):
 
-        if graph_number == 1:
-            # MUSEUM
+    def set_graph(self, graph_number: int):
+
+        if graph_number == 0:
+            self.graph = ext.get_graph_00()
+        elif graph_number == 1:
+            # OFFICE
             self.graph = ext.get_graph_01()
         elif graph_number == 2:
             # GRID 10x10
@@ -82,7 +86,7 @@ class MyInputs:
         elif graph_number == 6:
             self.graph = ext.get_graph_06()
         elif graph_number == 7:
-            # OFFICE
+            # MUSEUM
             self.graph = ext.get_graph_07()
         else:
             print("No graph with that number")
@@ -169,7 +173,7 @@ class MyInputs:
     def set_target_motion(self, my_motion: str):
         self.target_motion = my_motion
 
-    def set_belief_distribution_type(self, type_of_belief: str):
+    def set_belief_distribution(self, type_of_belief: str):
         self.belief_distribution = type_of_belief
 
     def set_b0(self, b0):
@@ -179,7 +183,7 @@ class MyInputs:
     def set_timeout(self, timeout: int):
         self.timeout = timeout
 
-    def set_start_searcher_start(self, v0: list):
+    def set_start_searchers(self, v0: list):
         self.start_searcher_random = False
         self.start_searcher_v = v0
 
@@ -187,16 +191,16 @@ class MyInputs:
         self.start_target_random = False
         self.start_target_true = v0
 
-    def set_start_target_v_list(self, v_list: list):
+    def set_start_target_list(self, v_list: list):
         self.start_target_random = False
-        self.start_target_true = v_list
+        self.start_target_true = v_list[0]
 
     def set_v_taken(self, v_list: list, who: str):
         self.v_taken = v_list
         if who == 's':
-            self.set_start_searcher_start(v_list)
+            self.set_start_searchers(v_list)
         else:
-            self.set_start_target_v_list(v_list)
+            self.set_start_target_list(v_list)
 
 
 

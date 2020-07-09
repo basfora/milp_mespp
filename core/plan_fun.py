@@ -11,11 +11,12 @@ from gurobipy import *
 
 
 # main wrappers
-def run_default_planner():
+def run_default_planner(specs=None):
     """Initialize the planner the pre-set parameters
         Return path of searchers as list"""
 
-    specs = cp.define_specs()
+    if specs is None:
+        specs = cp.define_specs()
 
     belief, searchers, solver_data, target = init_wrapper(specs)
 
@@ -161,8 +162,7 @@ def distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout=5, n
                 previous_obj_fun = obj_fun
                 my_counter = my_counter + 1
 
-                # check for stoppers
-                # either the objective function converged or iterated as much as I wanted
+                # check for stoppers: either the objective function converged or iterated as much as I wanted
                 if (delta_obj < 1e-4) or (my_counter >= n_it):
                     time_sol_list['total'] = total_time_sol
                     # clean and delete
@@ -211,7 +211,7 @@ def init_temp_path(searchers: dict, horizon: int):
     :param horizon: planning horizon (h)"""
 
     Tau = ext.get_set_ext_time(horizon)
-    start = ext.get_start_set(searchers)
+    start = ext.get_position_list(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
 
@@ -293,7 +293,7 @@ def path_as_list(path: dict):
     pi = dict()
 
     h = ext.get_h(path)
-    m = ext.get_m(path)
+    m = ext.get_m_from_tuple(path)
     T = ext.get_set_ext_time(h)
     S = ext.get_set_searchers(m)[0]
 
@@ -331,7 +331,7 @@ def path_of_s(path: dict, s_id):
 def next_from_path(path: dict, t_plan: int):
     """ get new position of searchers as new_pos = {s: v}"""
 
-    m = ext.get_m(path)
+    m = ext.get_m_from_tuple(path)
     S = ext.get_set_searchers(m)[0]
 
     new_pos = dict()

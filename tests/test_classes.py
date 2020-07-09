@@ -1,4 +1,3 @@
-import core.milp_fun
 from core import extract_info as ext
 from core import construct_model as cm
 from core import create_parameters as cp
@@ -14,47 +13,47 @@ from gurobipy import *
 def parameters_7v_random_motion():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]
     # initial searcher vertices
-    v_searchers = [1, 2]
+    v0_searchers = [1, 2]
     deadline = 3
     # type of motion
     target_motion = 'random'
     belief_distribution = 'uniform'
     # initialize parameters
-    b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
-    searchers = cp.create_my_searchers(g, v_searchers)
+    b_0, M = cp.my_target_motion(g, v_target, belief_distribution)
+    searchers = cp.create_my_searchers(g, v0_searchers)
     n = 7
-    return n, b_0, M, searchers_info, searchers
+    return n, b_0, M, searchers
 
 
 def parameters_7v_random_motion2():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G_7V7E.p'
+    graph_file = 'G7V7E.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]
     # initial searcher vertices
-    v_searchers = [1, 2]
+    v0_searchers = [1, 2]
     deadline = 3
     # type of motion
     target_motion = 'random'
     belief_distribution = 'uniform'
     # initialize parameters
-    b_0, M, searchers_info = cp.init_parameters(g, v_target, v_searchers, target_motion, belief_distribution)
-    searchers = cp.create_my_searchers(g, v_searchers)
+    b_0, M = cp.my_target_motion(g, v_target, belief_distribution)
+    searchers = cp.create_my_searchers(g, v0_searchers)
     n = 7
-    return n, b_0, M, searchers_info, g, searchers
+    return n, b_0, M, searchers, g
 
 
 def test_belief_class_init():
     """Test class target"""
 
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     b = MyBelief(b_0)
 
@@ -66,7 +65,7 @@ def test_belief_class_init():
 
 
 def test_belief_class_update():
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     # searchers position
     new_pos = dict()
@@ -79,11 +78,11 @@ def test_belief_class_update():
     b1 = MyBelief(b_0)
 
     # class method, update belief
-    b.update(searchers_info, new_pos, M, n)
+    b.update(searchers, new_pos, M, n)
     b1.update(searchers, new_pos, M, n)
 
     # find the product of the capture matrices, s = 1...m
-    prod_C = cm.product_capture_matrix(searchers_info, new_pos, n)
+    prod_C = cm.product_capture_matrix(searchers, new_pos, n)
     prod_C1 = cm.product_capture_matrix(searchers, new_pos, n)
 
     # assemble the matrix for multiplication
@@ -111,13 +110,13 @@ def test_belief_class_update():
 
 
 def test_belief_update_init():
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     b = MyBelief(b_0)
     new_belief = [0, 0.5, 0, 0, 0, 0, 0.5, 0]
 
     # searchers position
-    s_pos = {}
+    s_pos = dict()
     s_pos[(1, 0)] = 1
     s_pos[(2, 0)] = 2
 
@@ -131,7 +130,7 @@ def test_target_class_init():
     v_target = [6, 7]
     v_target_true = 7
 
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M, v_target_true)
 
@@ -156,15 +155,11 @@ def test_target_class_init2():
 
     v_target = [6, 7]
 
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
-    bad_inited = False
-    try:
-        target = MyTarget(v_target, M)
-    except:
-        bad_inited = True
+    target = MyTarget(v_target, M)
 
-    assert bad_inited is True
+    assert target.start_true == 6
 
     v_target = [7]
     target = MyTarget(v_target, M)
@@ -174,7 +169,7 @@ def test_target_class_init2():
 
 def test_target_update_status():
     v_target = [7]
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M)
 
@@ -186,7 +181,7 @@ def test_target_update_status():
 
 def test_target_evolve_position():
     v_target = [7]
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     target = MyTarget(v_target, M)
 
@@ -208,16 +203,16 @@ def test_target_evolve_position():
 
 def test_searcher_class():
 
-    n, b_0, M, searchers_info, searchers = parameters_7v_random_motion()
+    n, b_0, M, searchers = parameters_7v_random_motion()
 
     s = searchers[1]
 
     assert s.id == 1
     assert s.start == 1
     assert isinstance(s.capture_matrices, dict)
-    assert isinstance(cm.get_all_capture_matrices(searchers_info, 1), dict)
+    assert isinstance(cm.get_all_capture_s(searchers, 1), dict)
 
-    assert all(s.capture_matrices) == all(cm.get_all_capture_matrices(searchers_info, 1))
+    assert all(s.capture_matrices) == all(cm.get_all_capture_s(searchers, 1))
     assert s.init_milp == 1
     assert s.catcher is False
     assert len(s.path_planned) == 0
@@ -250,25 +245,25 @@ def test_searcher_class():
 def test_solver_data_class():
 
     horizon = 3
-    n, b_0, M, searchers_info, g, searchers = parameters_7v_random_motion2()
+    n, b_0, M, searchers, g = parameters_7v_random_motion2()
     # solve
     # create model
     md = Model("my_model")
 
-    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers_info)
+    start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers)
     start1, vertices_t1, times_v1 = cm.get_vertices_and_steps(g, horizon, searchers)
 
     my_vars = mf.add_variables(md, g, horizon, start, vertices_t)
 
-    mf.add_constraints(md, g, my_vars, searchers_info, vertices_t, horizon, b_0, M)
+    mf.add_constraints(md, g, my_vars, searchers, vertices_t, horizon, b_0, M)
 
-    mf.set_solver_parameters(md, 1.5, horizon, my_vars)
+    mf.set_solver_parameters(md, 0.99, horizon, my_vars)
 
     md.update()
     # Optimize model
     md.optimize()
 
-    x_s, b_target = core.milp_fun.query_variables(md)
+    x_s, b_target = mf.query_variables(md)
 
     obj_fun = md.objVal
     gap = md.MIPGap

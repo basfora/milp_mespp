@@ -132,7 +132,6 @@ def create_target(specs):
     return target
 
 
-# ----------------------------------------------------------------------------------------------------------------------
 # instance parameters
 def draw_v_random(g_or_n, q=1, my_seed=None):
     """Choose possible random vertices for the starting point of the target

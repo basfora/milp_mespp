@@ -18,7 +18,7 @@ from classes.inputs import MyInputs
 # initialize default inputs
 exp_inputs = MyInputs()
 # graph number -- MUSEUM (1), GRID 10x10 (2), 3
-exp_inputs.get_graph(2)
+exp_inputs.set_graph(2)
 # solver parameter: central x distributed
 exp_inputs.set_solver_type('distributed')
 # searchers' detection: capture range and false negatives

@@ -95,6 +95,17 @@ class MySearcher:
 
         return C_all
 
+    def get_capture_matrix(self, u):
+        """get capture matrices for a single searcher s and vertex u"""
+        c_matrices = self.capture_matrices
+        C = c_matrices.get(u)
+
+        return C
+
+    def get_all_capture_matrices(self):
+        """get capture matrices for a single searcher s"""
+        return self.capture_matrices
+
     @staticmethod
     def rule_intercept(v, nu, capture_range=0, zeta=None, g=None):
         """create C matrix based on the rule of interception
