@@ -7,6 +7,7 @@ from classes.belief import MyBelief
 from classes.target import MyTarget
 from classes.searcher import MySearcher
 from classes.solver_data import MySolverData
+from tests import test_sim_fun as tsf
 from gurobipy import *
 
 
@@ -68,9 +69,6 @@ def test_belief_class_init():
     b0 = cp.set_initial_belief(n, v0_target)
 
     assert b0 == [0, 0, 0, 0, 0, 0, 0, 1]
-
-
-
 
 
 def test_belief_class_update():
@@ -297,4 +295,27 @@ def test_solver_data_class():
     assert my_data.belief[0] == b_target
     assert my_data.solver_type == 'central'
     assert my_data.threads[0] == threads
+
+
+def test_unpack():
+
+    specs = tsf.my_specs()
+    M1 = cp.set_motion_matrix(specs.graph, specs.target_motion)
+
+    belief = cp.create_belief(specs)
+    searchers = cp.create_searchers(specs)
+    solver_data = cp.create_solver_data(specs)
+    target = cp.create_target(specs)
+
+    M = target.unpack()
+    assert M == M1
+    deadline, horizon, theta, solver_type, gamma = solver_data.unpack()
+
+    assert deadline == specs.deadline
+    assert horizon == specs.horizon
+    assert theta == specs.theta
+    assert solver_type == specs.solver_type
+    assert gamma == specs.gamma
+
+
 

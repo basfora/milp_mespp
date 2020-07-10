@@ -247,7 +247,7 @@ def test_run_solver_get_model_data():
     path3 = pln.run_planner(specs)
 
     assert obj_fun1 == md.objVal
-    assert round(time_sol1, 4) == round(md.Runtime, 4)
+    assert round(time_sol1, 2) == round(md.Runtime, 2)
     assert gap1 == md.MIPGap
 
     # 1 x 2
@@ -255,7 +255,7 @@ def test_run_solver_get_model_data():
     assert b_target1 == b_target2
 
     assert obj_fun2 == obj_fun1
-    assert round(time_sol2, 3) == round(time_sol1, 3)
+    assert round(time_sol2, 2) == round(time_sol1, 2)
     assert gap2 == gap1
     assert threads2 == threads1
 
@@ -407,7 +407,7 @@ def test_time_consistency():
                                                                                   M1, gamma1, solver_type1)
 
     assert obj_fun == obj_fun1
-    assert round(time_sol, 3) == round(time_sol1, 3)
+    assert round(time_sol, 2) == round(time_sol1, 2)
     assert gap == gap1
     assert x_searchers == x_searchers1
     assert b_target == b_target1

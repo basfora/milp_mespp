@@ -27,7 +27,7 @@ def simulator_main(specs):
     m = specs.size_team
 
     # initialize classes
-    belief, target, searchers, solver_data = pln.init_wrapper(specs, True)
+    belief, searchers, solver_data, target = pln.init_wrapper(specs, True)
     # -------------------------------------------------------------------------------
 
     deadline, horizon, theta, solver_type, gamma = solver_data.unpack()

@@ -91,7 +91,7 @@ def create_searchers(specs):
             v_list = searchers_start_together(m, v_list)
         # len(v0) = m
         v0 = v_list
-        specs.set_start_searcher(v0)
+        specs.set_start_searchers(v0)
     else:
         # if it was, use that
         v0 = specs.start_searcher_v
