@@ -132,16 +132,16 @@ def get_vertices_and_steps_distributed(G, deadline, searchers, temp_s_path):
 
 
 # V(t)
-def get_next_vertices(g, s: int, v: int, t: int, vertices_t: dict, Tau_ext: list):
+def get_next_vertices(g, s: int, v: int, t: int, vertices_t: dict, T_ext: list):
     """Find possible next vertices according to time
      s, v and t refers to the value of each (not index)"""
     v_idx = ext.get_python_idx(v)
 
     # is at last possible vertex, will be at dummy goal on T + 1 -  don't worry about proximity
-    if t == Tau_ext[-1]:
+    if t == T_ext[-1]:
         return vertices_t.get((s, t + 1))
     # check for physical proximity (neighbors) AND possible vertex at t+1
-    elif t < Tau_ext[-1]:
+    elif t < T_ext[-1]:
         v_t_next = []
         v_nei = g.vs[v_idx]["neighbors"] + [v_idx]
         # get labels

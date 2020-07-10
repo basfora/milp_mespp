@@ -13,7 +13,7 @@ def test_add_searcher_variables_x():
     v0_searchers = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
@@ -50,7 +50,7 @@ def test_add_searcher_variables_y():
     v0_searchers = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
@@ -120,7 +120,7 @@ def test_get_var():
     v0_searchers = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
@@ -158,7 +158,7 @@ def test_position_searchers():
     belief_distribution = 'uniform'
     b0, M = cp.my_target_motion(g, v_target, belief_distribution, target_motion)
     # searchers
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
 
     # solve
     # create model

@@ -25,7 +25,7 @@ def parameters_7v_random_motion():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M = cp.my_target_motion(g, v_target, belief_distribution)
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
     n = 7
     return n, b_0, M, searchers
 
@@ -45,23 +45,32 @@ def parameters_7v_random_motion2():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0, M = cp.my_target_motion(g, v_target, belief_distribution)
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
     n = 7
     return n, b_0, M, searchers, g
 
 
 def test_belief_class_init():
-    """Test class target"""
+    """Test class belief"""
 
     n, b_0, M, searchers = parameters_7v_random_motion()
 
-    b = MyBelief(b_0)
+    belief = MyBelief(b_0)
 
-    dict_belief = b.stored
+    assert len(belief.start_belief) == n + 1
+    assert len(belief.stored[0]) == n + 1
+    assert len(belief.milp_init_belief) == n + 1
+    assert belief.start_belief == b_0
+    assert belief.stored[0] == b_0
+    assert belief.milp_init_belief == b_0
 
-    assert b.start_belief == b_0
-    assert dict_belief[0] == b_0
-    assert b.milp_init_belief == b_0
+    v0_target = [7]
+    b0 = cp.set_initial_belief(n, v0_target)
+
+    assert b0 == [0, 0, 0, 0, 0, 0, 0, 1]
+
+
+
 
 
 def test_belief_class_update():

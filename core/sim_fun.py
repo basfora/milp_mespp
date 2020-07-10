@@ -39,7 +39,6 @@ def simulator_main(specs):
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0
     path = {}
-    path_next_t = {}
     # _____________________
 
     # begin simulation loop
@@ -73,7 +72,7 @@ def simulator_main(specs):
         path_next_t = pln.next_from_path(path, t_plan)
 
         # evolve searcher position
-        searchers = pln.searchers_next_position(searchers, path_next_t)
+        searchers = pln.searchers_evolve(searchers, path_next_t)
 
         # update belief
         belief.update(searchers, path_next_t, M, n)

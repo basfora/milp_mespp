@@ -64,8 +64,6 @@ class MyInputs:
         self.runs_per_m = 20
         self.list_turns = list(range(self.today_run - 1, self.runs_per_m))
 
-
-
     def set_graph(self, graph_number: int):
 
         if graph_number == 0:
@@ -186,6 +184,7 @@ class MyInputs:
     def set_start_searchers(self, v0: list):
         self.start_searcher_random = False
         self.start_searcher_v = v0
+        self.size_team = len(v0)
 
     def set_start_target_true(self, v0: int):
         self.start_target_random = False
@@ -193,6 +192,9 @@ class MyInputs:
 
     def set_start_target_list(self, v_list: list):
         self.start_target_random = False
+        self.start_target_v_list = v_list
+
+        self.qty_possible_nodes = len(v_list)
         self.start_target_true = v_list[0]
 
     def set_v_taken(self, v_list: list, who: str):
@@ -201,6 +203,9 @@ class MyInputs:
             self.set_start_searchers(v_list)
         else:
             self.set_start_target_list(v_list)
+
+    def set_searcher_together(self, op: bool):
+        self.searcher_together = op
 
 
 

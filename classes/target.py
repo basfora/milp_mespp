@@ -1,4 +1,3 @@
-import core.extract_info
 from core import construct_model as cm
 from core import extract_info as ext
 
@@ -12,20 +11,20 @@ class MyTarget:
     status capture
     """
 
-    def __init__(self, plan_position: list, motion_matrix: list, true_position=None, my_seed=None, true_motion=None):
+    def __init__(self, v_init_list: list, motion_matrix: list, true_position=None, my_seed=None, true_motion=None):
         """create instance of class with input position and belief"""
 
         # INITIAL
         # information fed to the planning (may be more than one vertex)
-        self.start_possible = plan_position
+        self.start_possible = v_init_list
         self.motion_matrix = motion_matrix
         self.seed = my_seed
 
         # if no true information was provided, use the information used in the planning
         # true position is always a single vertex
         if true_position is None:
-            if len(plan_position) > 0:
-                true_position = plan_position[0]
+            if len(v_init_list) > 0:
+                true_position = v_init_list[0]
             else:
                 print("Please provide a start vertex for the target simulation.")
                 exit()
@@ -87,7 +86,7 @@ class MyTarget:
         my_vertices, prob_move = cm.probability_move(M, current_vertex)
 
         # sample 1 vertex with probability weight according to prob_move
-        new_vertex = core.extract_info.sample_vertex(my_vertices, prob_move)
+        new_vertex = ext.sample_vertex(my_vertices, prob_move)
 
         # update true position
         self.stored_v_true[next_time] = new_vertex

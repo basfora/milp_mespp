@@ -331,7 +331,7 @@ def add_00_str(number: int):
     return n_str
 
 
-def get_name_code_folder(today_run: int, m_searcher, g, solver_type='central', zeta=None, capture_range='same_vertex',
+def get_name_code_folder(today_run: int, m_searcher, g, solver_type='central', zeta=None, capture_range=0,
                          horizon=None, day_start=None):
     """Give back the name of the folder
     which follows:

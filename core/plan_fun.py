@@ -10,8 +10,7 @@ from classes.inputs import MyInputs
 from gurobipy import *
 
 
-# main wrappers
-def run_default_planner(specs=None):
+def run_planner(specs=None):
     """Initialize the planner the pre-set parameters
         Return path of searchers as list"""
 
@@ -27,19 +26,20 @@ def run_default_planner(specs=None):
     M = target.unpack()
 
     obj_fun, time_sol, gap, x_s, b_target, threads = run_solver(g, h, searchers, b0, M)
+    searchers, path_dict = update_plan(searchers, x_s)
 
-    path = print_path(x_s)
+    path_list = path_as_list(path_dict)
 
-    return path
+    return path_list
 
 
-def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, opt='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
+def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, solver_type='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
     """Run solver according to type of planning specified"""
 
-    if opt == 'central':
+    if solver_type == 'central':
         obj_fun, time_sol, gap, x_searchers, b_target, threads = central_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout)
 
-    elif opt == 'distributed':
+    elif solver_type == 'distributed':
         obj_fun, time_sol, gap, x_searchers, b_target, threads = distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout, n_inter, pre_solve)
     else:
         obj_fun, time_sol, gap, x_searchers, b_target, threads = mf.none_model_vars()
@@ -47,13 +47,14 @@ def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, opt='central', t
     return obj_fun, time_sol, gap, x_searchers, b_target, threads
 
 
+# main wrappers
 def central_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout):
     """Add variables, constraints, objective function and solve the model
     compute all paths"""
 
     solver_type = 'central'
 
-    # OK with searchers
+    # V^{s, t}
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, horizon, searchers)
 
     # create model
@@ -172,7 +173,6 @@ def distributed_wrapper(g, horizon, searchers, b0, M_target, gamma, timeout=5, n
                     return obj_fun_list, time_sol_list, gap_list, x_searchers, b_target, threads
 
 
-# initial_wrapper
 def init_wrapper(specs, sim=False):
     """Initialize necessary classes depending on sim or plan only
     default: plan only"""
@@ -381,7 +381,7 @@ def store_path(searchers: dict, path: dict):
     return searchers
 
 
-def searchers_next_position(searchers, new_pos):
+def searchers_evolve(searchers, new_pos):
     """call to evolve searchers position """
 
     for s_id in searchers.keys():
@@ -392,4 +392,4 @@ def searchers_next_position(searchers, new_pos):
 
 
 if __name__ == "__main__":
-    planned_path = run_default_planner()
+    planned_path = run_planner()

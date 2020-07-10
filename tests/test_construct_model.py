@@ -14,7 +14,7 @@ def test_get_vertices_and_steps_start():
     v0_searchers = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0_searchers)
+    searchers = cp.create_dict_searchers(g, v0_searchers)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert start[0] == v0_searchers[0]
@@ -28,7 +28,7 @@ def test_get_vertices_and_steps_vertices():
     v0 = [1, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0)
+    searchers = cp.create_dict_searchers(g, v0)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert vertices_t.get((1, 0)) == [1]
@@ -44,7 +44,7 @@ def test_get_vertices_and_steps_vertices2():
     v0 = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0)
+    searchers = cp.create_dict_searchers(g, v0)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert vertices_t.get((1, 0)) == [3]
@@ -60,7 +60,7 @@ def test_get_vertices_and_steps_times():
     v0 = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0)
+    searchers = cp.create_dict_searchers(g, v0)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
     assert times_v.get((1, 1)) == [1, 2, 3]
@@ -79,7 +79,7 @@ def test_get_vertices_and_steps_distributed():
     v0 = [1, 2]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0)
+    searchers = cp.create_dict_searchers(g, v0)
 
     temp_s_path = pln.init_temp_path(searchers, deadline)
     temp_s_path['current_searcher'] = 1
@@ -125,7 +125,7 @@ def test_neighbors():
     v0 = [3, 1]
     deadline = 3
     # searchers
-    searchers = cp.create_my_searchers(g, v0)
+    searchers = cp.create_dict_searchers(g, v0)
 
     start, vertices_t, times_v = cm.get_vertices_and_steps(g, deadline, searchers)
 
@@ -294,7 +294,7 @@ def test_product_capture_matrix():
     target_motion = 'random'
     belief_distribution = 'uniform'
     # searchers
-    searchers = cp.create_my_searchers(g, v_searchers)
+    searchers = cp.create_dict_searchers(g, v_searchers)
 
     s = 1
     v = 1
@@ -392,8 +392,8 @@ def parameters_7v_random_motion():
     belief_distribution = 'uniform'
     # initialize parameters
     b_0 = cp.set_initial_belief(g, v_target, belief_distribution)
-    M = cp.my_motion_matrix(g, target_motion)
-    searchers = cp.create_my_searchers(g, v_searchers)
+    M = cp.set_motion_matrix(g, target_motion)
+    searchers = cp.create_dict_searchers(g, v_searchers)
 
     n = 7
     return n, b_0, M, searchers

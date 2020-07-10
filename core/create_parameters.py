@@ -55,19 +55,23 @@ def create_belief(specs):
         g = specs.graph
         # type of distribution (default: uniform)
         type_distribution = specs.belief_distribution
-        v_list = placement_list(specs, 't')
-        # create b_0 (list with probabilities, b[0] = 0)
+        if specs.start_target_v_list is None:
+            # does not have a list of possible target start vertices
+            v_list = placement_list(specs, 't')
+        else:
+            v_list = specs.start_target_v_list
+        # create b_0 (list with probabilities, b_c = b[0] = 0)
         b_0 = set_initial_belief(g, v_list, type_distribution)
     else:
         # user-defined initial belief (with b_c)
         b_0 = specs.b0
 
-    # save on specs
-    v_list = v_list_from_belief(b_0)
-    specs.set_set_start_target_v_list(v_list)
-
     # create belief obj
     belief = MyBelief(b_0)
+
+    # save on specs
+    v_list = v_list_from_belief(b_0)
+    specs.set_start_target_list(v_list)
 
     return belief
 
@@ -85,7 +89,6 @@ def create_searchers(specs):
         v_list = placement_list(specs, 's')
         if specs.searcher_together:
             v_list = searchers_start_together(m, v_list)
-
         # len(v0) = m
         v0 = v_list
         specs.set_start_searcher(v0)
@@ -93,20 +96,14 @@ def create_searchers(specs):
         # if it was, use that
         v0 = specs.start_searcher_v
 
-    # set of searchers S = {1,..m}
-    S = ext.get_set_searchers(m)[0]
-    # create dict
-    searchers = {}
-    for s_id in S:
-        v = ext.get_v0_s(v0, s_id)
-        cap = ext.get_capture_range_s(capture_range, s_id)
-        zeta_s = ext.get_zeta_s(zeta, s_id)
+    # get graph vertices
+    V, n = ext.get_set_vertices(g)
+    if any(v0) not in V:
+        print("Vertex out of range, V = {1, 2...n}")
+        return None
 
-        # create each searcher
-        s = MySearcher(s_id, v, g, cap, zeta_s)
+    searchers = create_dict_searchers(g, v0, capture_range, zeta)
 
-        # store in dictionary
-        searchers[s_id] = s
     return searchers
 
 
@@ -125,7 +122,7 @@ def create_target(specs):
     true_position = specs.start_target_true
 
     # generate motion matrix M
-    motion_matrix = my_motion_matrix(g, motion_rule)
+    motion_matrix = set_motion_matrix(g, motion_rule)
 
     target = MyTarget(v_list, motion_matrix, true_position, my_seed)
 
@@ -178,7 +175,8 @@ def pick_pseudo_random(my_list: list, my_seed: int, qty: int, replace_opt=None):
 
 
 def placement_list(specs, op='s'):
-    """Make sure belief and searchers' start vertices are far away (out of reach)
+    """Call only when the initial position is random (no list defined by user)
+    Make sure belief and searchers' start vertices are far away (out of reach)
     so that b_c(0) = 0
     :param specs : inputs
     :param op : 's' to place searchers, 't' to get list of vertices for belief """
@@ -211,7 +209,7 @@ def placement_list(specs, op='s'):
         out_of_reach = False
         # keep drawing until is out of reach
         while out_of_reach is False:
-            v_list = draw_v_random(g, q, my_seed)
+            v_list = draw_v_random(g, q, my_seed)[0]
             specs.change_seed(my_seed, 't')
             out_of_reach = check_reachability(g, specs.capture_range, v_list, v_taken)
             my_seed += 500
@@ -266,12 +264,12 @@ def my_target_motion(g, init_vertex: list,  init_prob='uniform',  motion_rule='r
     b_0 = set_initial_belief(g, init_vertex, init_prob)
 
     # target motion model - Markovian, random
-    M = my_motion_matrix(g, motion_rule)
+    M = set_motion_matrix(g, motion_rule)
 
     return b_0, M
 
 
-def my_motion_matrix(g,  motion_rule='random'):
+def set_motion_matrix(g, motion_rule='random'):
     """Define Markovian motion matrix for target
     unless specified, motion is random (uniform) according to neighbor vertices"""
 
@@ -415,42 +413,25 @@ def my_searchers_info(g, v0, capture_range=0, zeta=None):
     return searchers_info
 
 
-def create_my_searchers(g, v0: list, capture_range=0, zeta=None):
-    """Give searchers info (dictionary with id number as keys).
+def create_dict_searchers(g, v0: list, capture_range=0, zeta=None):
+    """Create searchers (dictionary with id number as keys).
             Nested: initial position, capture matrices for each vertex"""
-    # get set of searchers based on initial vertex for searchers
+
+    # set of searchers S = {1,..m}
     S = ext.get_set_searchers(v0)[0]
-    # get graph vertices
-    V, n = ext.get_set_vertices(g)
-
-    # check to see if it's a vertex in the graph
-    if any(v0) not in V:
-        print("Vertex out of range, V = {1, 2...n}")
-        return None
-
-    cap_s, zeta_s = 0, None
     # create dict
     searchers = {}
     for s_id in S:
-        idx = ext.get_python_idx(s_id)
-
-        v_s = v0[idx]
-
-        if isinstance(capture_range, int):
-            cap_s = capture_range
-        elif isinstance(capture_range, list):
-            cap_s = capture_range[idx]
-
-        if zeta is not None:
-            if isinstance(zeta, list):
-                zeta_s = zeta[idx]
-            elif isinstance(zeta, float):
-                zeta_s = zeta
+        v = ext.get_v0_s(v0, s_id)
+        cap_s = ext.get_capture_range_s(capture_range, s_id)
+        zeta_s = ext.get_zeta_s(zeta, s_id)
 
         # create each searcher
-        s = MySearcher(s_id, v_s, g, cap_s, zeta_s)
+        s = MySearcher(s_id, v, g, cap_s, zeta_s)
+
         # store in dictionary
         searchers[s_id] = s
+
     return searchers
 
 
