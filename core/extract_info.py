@@ -190,26 +190,28 @@ def get_v_left(g_or_n, v_list):
 # ---------------------
 # get indexes
 # ---------------------
+# UT-ok
 def get_idx_searchers(info_input):
     """Return index of searchers (python style)
-         S_IDX = {0,...m-1}
-         UT-ok"""
+         S_IDX = {0,...m-1}"""
     m = get_set_searchers(info_input)[1]
     S_ = list(range(0, m))
     return S_, m
 
 
+# UT-ok
 def get_idx_time(deadline):
     """Return time-step indexing:
-     Tau = {0,1...T-1},  T = deadline"""
-    Tau_ = list(range(0, deadline))
-    return Tau_
+     T = {0,1...tau-1},  tau = deadline"""
+    T_ = list(range(0, deadline))
+    return T_
 
 
-def get_idx_vertices(g):
+# UT-ok
+def get_idx_vertices(g_or_n):
     """Return index of graph vertices,
     V = {0, 2,...n-1}"""
-    n = len(g.vs)
+    n = get_set_vertices(g_or_n)[1]
     V_ = list(range(0, n))
     return V_, n
 

@@ -100,6 +100,9 @@ def test_get_time():
     T = ext.get_set_time(deadline)
     assert T == [1, 2, 3]
 
+    T_idx = ext.get_idx_time(deadline)
+    assert T_idx == [0, 1, 2]
+
     T_ext = ext.get_set_time_u_0(deadline)
     T_ext2 = ext.get_set_time_u_0(T)
     assert T_ext == [0, 1, 2, 3]
@@ -116,6 +119,14 @@ def test_get_vertices():
 
     V, n = ext.get_set_vertices(n)
     assert V == [1, 2, 3, 4, 5, 6, 7]
+    assert n == 7
+
+    V_idx, n = ext.get_idx_vertices(g)
+    assert V_idx == [0, 1, 2, 3, 4, 5, 6]
+    assert n == 7
+
+    V_idx, n = ext.get_idx_vertices(n)
+    assert V_idx == [0, 1, 2, 3, 4, 5, 6]
     assert n == 7
 
     V_ext = ext.get_set_vertices_u_0(g)
