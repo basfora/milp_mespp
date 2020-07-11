@@ -15,7 +15,7 @@ import random
 
 
 # init inputs class
-def define_specs():
+def default_specs():
     """Initialize pre-set parameters
     If needed, change parameters here using MyInputs() class functions
     Return: specs"""

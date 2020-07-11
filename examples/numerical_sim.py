@@ -48,7 +48,7 @@ for m in exp_inputs.list_m:
         exp_inputs.set_seeds(turn)
 
         # run simulator
-        belief, target, searchers, sim_data = sf.simulator_main(exp_inputs)
+        belief, target, searchers, sim_data = sf.run_simulator(exp_inputs)
 
         # save everything as a pickle file
         sf.create_save_pickle(belief, target, searchers, sim_data, name_folder, exp_inputs)

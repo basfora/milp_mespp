@@ -7,12 +7,13 @@ import pickle
 import random
 
 
-def run_default_sim():
+def run_simulator(specs=None):
     """Initialize the planner the pre-set parameters
     If needed, change parameters here using MyInputs() class functions
     Return path of searchers as list"""
 
-    specs = cp.define_specs()
+    if specs is None:
+        specs = cp.default_specs()
 
     belief, target, searchers, solver_data = simulator_main(specs)
 
@@ -185,4 +186,4 @@ def evolve_target(target, updated_belief: list):
 
 
 if __name__ == "__main__":
-    belief_obj, target_obj, searchers_obj, solver_data_obj = run_default_sim()
+    belief_obj, target_obj, searchers_obj, solver_data_obj = run_simulator()

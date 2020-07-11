@@ -15,7 +15,7 @@ def run_planner(specs=None):
         Return path of searchers as list"""
 
     if specs is None:
-        specs = cp.define_specs()
+        specs = cp.default_specs()
 
     belief, searchers, solver_data, target = init_wrapper(specs)
 
