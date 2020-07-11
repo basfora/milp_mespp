@@ -210,8 +210,8 @@ def init_temp_path(searchers: dict, horizon: int):
     :param searchers: dictionary of searcher class
     :param horizon: planning horizon (h)"""
 
-    Tau = ext.get_set_ext_time(horizon)
-    start = ext.get_position_list(searchers)
+    Tau = ext.get_set_time_u_0(horizon)
+    start = ext.get_searchers_positions(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
 
@@ -292,9 +292,9 @@ def path_as_list(path: dict):
 
     pi = dict()
 
-    h = ext.get_h(path)
+    h = ext.get_h_from_tuple(path)
     m = ext.get_m_from_tuple(path)
-    T = ext.get_set_ext_time(h)
+    T = ext.get_set_time_u_0(h)
     S = ext.get_set_searchers(m)[0]
 
     # loop through time

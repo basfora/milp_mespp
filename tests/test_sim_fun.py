@@ -13,7 +13,7 @@ from gurobipy import *
 
 def parameters_sim():
 
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     target_motion = 'random'
     belief_distribution = 'uniform'
@@ -177,7 +177,7 @@ def test_update_start_searchers():
     # update searcher position
     searchers = pln.searchers_evolve(searchers, fake_pos)
 
-    pos_list = ext.get_position_list(searchers)
+    pos_list = ext.get_searchers_positions(searchers)
     for s_id in searchers.keys():
         assert pos_list[s_id - 1] == fake_pos[s_id]
         assert searchers[s_id].current_pos == fake_pos[s_id]
@@ -271,9 +271,6 @@ def test_get_positions_searchers():
     horizon, theta, deadline, solver_type = get_solver_param()
     g, v0_target, v0_searchers, target_motion, belief_distribution = parameters_sim()
 
-    # get sets for easy iteration
-    S, V, n, T = ext.get_sets_only(v0_searchers, deadline, g)
-
     # ________________________________________________________________________________________________________________
 
     # INITIALIZE
@@ -330,7 +327,7 @@ def test_time_consistency():
     gamma = 0.99
 
     # get sets for easy iteration
-    S, V, n, Tau = ext.get_sets_only(v0_searchers, deadline, g)
+    V, n = ext.get_set_vertices(g)
 
     # ________________________________________________________________________________________________________________
     # INITIALIZE

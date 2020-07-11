@@ -34,7 +34,7 @@ def simulator_main(specs):
     M = target.unpack()
 
     # get sets for easy iteration
-    S, V, Tau, n, m = ext.get_sets_and_ranges(g, m, horizon)
+    S, V, _, m, n = ext.get_sets_and_ranges(g, m, horizon)
 
     # initialize time: actual sim time, t = 0, 1, .... T and time relative to the planning, t_idx = 0, 1, ... H
     t, t_plan = 0, 0

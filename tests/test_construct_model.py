@@ -9,7 +9,7 @@ import numpy as np
 
 def test_get_vertices_and_steps_start():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0_searchers = [3, 1]
     deadline = 3
@@ -23,7 +23,7 @@ def test_get_vertices_and_steps_start():
 
 def test_get_vertices_and_steps_vertices():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0 = [1, 1]
     deadline = 3
@@ -39,7 +39,7 @@ def test_get_vertices_and_steps_vertices():
 
 def test_get_vertices_and_steps_vertices2():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0 = [3, 1]
     deadline = 3
@@ -55,7 +55,7 @@ def test_get_vertices_and_steps_vertices2():
 
 def test_get_vertices_and_steps_times():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0 = [3, 1]
     deadline = 3
@@ -74,7 +74,7 @@ def test_get_vertices_and_steps_times():
 
 def test_get_vertices_and_steps_distributed():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0 = [1, 2]
     deadline = 3
@@ -119,7 +119,7 @@ def test_get_vertices_and_steps_distributed():
 
 def test_neighbors():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
 
     v0 = [3, 1]
@@ -132,7 +132,7 @@ def test_neighbors():
     s = 1
     v = 3
     t = 2
-    tau_ext = ext.get_set_ext_time(deadline)
+    tau_ext = ext.get_set_time_u_0(deadline)
     v_possible = cm.get_next_vertices(g, s, v, t, vertices_t, tau_ext)
 
     assert v_possible == [1, 5, 3]
@@ -176,7 +176,7 @@ def test_assemble_big_matrix2():
     # input parameters for graph
     n_vertex = 7
 
-    graph_name = 'G7V7E.p'
+    graph_name = 'G7V_test.p'
     g = ext.get_graph(graph_name)
 
     # input for target initial vertices (belief)
@@ -286,7 +286,7 @@ def test_probability_move():
 def test_product_capture_matrix():
 
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     # initial searcher vertices
     v_searchers = [1]
@@ -380,7 +380,7 @@ def test_get_true_position():
 def parameters_7v_random_motion():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]

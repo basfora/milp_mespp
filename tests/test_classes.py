@@ -14,7 +14,7 @@ from gurobipy import *
 def parameters_7v_random_motion():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]
@@ -34,7 +34,7 @@ def parameters_7v_random_motion():
 def parameters_7v_random_motion2():
     """Parameters pre-defined for unit tests"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]

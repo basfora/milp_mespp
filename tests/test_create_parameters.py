@@ -8,7 +8,7 @@ from classes.belief import MyBelief
 def test_belief_vector():
     """Test b_0 for vertices with equal probability"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v_list = [5]
     type_distribution = 'uniform'
@@ -24,7 +24,7 @@ def test_belief_vector():
 def test_belief_vector_prob():
     """Test b_0 for several vertices, user defined probability"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
 
     v0_target = [1, 5, 7]
@@ -36,7 +36,7 @@ def test_belief_vector_prob():
 def test_markovian_matrix():
     """Test Markovian matrix M for random motion"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
 
     v0_target = [1, 5, 7]
@@ -233,7 +233,7 @@ def my_specs():
     horizon = 3
     solver_type = 'central'
 
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     target_motion = 'random'
     belief_distribution = 'uniform'

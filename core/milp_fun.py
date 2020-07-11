@@ -38,7 +38,7 @@ def add_constraints(md, g, my_vars: dict, searchers: dict, vertices_t: dict, dea
     :param g
     """
 
-    start = ext.get_position_list(searchers)
+    start = ext.get_searchers_positions(searchers)
 
     # searchers motion
     add_searcher_constraints(md, g, my_vars, start, vertices_t, deadline)
@@ -141,8 +141,8 @@ def get_model_data(md):
 
 def add_searcher_variables(md, g, start: list, vertices_t: dict, deadline: int):
     """Add variables related to the searchers on the model:
-    searchers location at each time step, X
-    searchers movement from t to t + 1, Y"""
+    X : searchers location at each time step
+    Y : searchers movement from t to t + 1"""
 
     [X, Y] = ext.init_dict_variables(2)
 
@@ -152,12 +152,12 @@ def add_searcher_variables(md, g, start: list, vertices_t: dict, deadline: int):
     list_x_name = []
     list_y_name = []
 
-    # Tau_ = ext.get_idx_time(deadline)
-    Tau_ext = ext.get_set_ext_time(deadline)
+    # T_ext = {0, 1,..., tau}
+    T_ext = ext.get_set_time_u_0(deadline)
 
     # searcher s is located at vertex v at time t
     for s in S:
-        for t in Tau_ext:
+        for t in T_ext:
             # get vertices that searcher s can be at time t (last t needs to be dummy goal vertex)
             # v_t returns the label of the vertices
             v_t = vertices_t.get((s, t))
@@ -171,7 +171,7 @@ def add_searcher_variables(md, g, start: list, vertices_t: dict, deadline: int):
 
                 # find Y[s, u, v, t] : from u, searcher s can move to u at t + 1
                 # returns vertices labels
-                my_next_v = cm.get_next_vertices(g, s, v, t, vertices_t, Tau_ext)
+                my_next_v = cm.get_next_vertices(g, s, v, t, vertices_t, T_ext)
                 if my_next_v is not None:
                     for u in my_next_v:
                         dummy_y_name = "y[%d,%d,%d,%d]" % (s, v, u, t)
@@ -198,10 +198,10 @@ def add_target_variables(md, g, deadline: int, searchers=None):
 
     V = ext.get_set_vertices(g)[0]
 
-    Tau_ext = ext.get_set_ext_time(deadline)
-    Tau = ext.get_set_time(deadline)
+    T_ext = ext.get_set_time_u_0(deadline)
+    T = ext.get_set_time(deadline)
 
-    V_ext = ext.get_set_ext_vertices(g)
+    V_ext = ext.get_set_vertices_u_0(g)
 
     var_for_test = {}
     list_beta_name = []
@@ -218,7 +218,7 @@ def add_target_variables(md, g, deadline: int, searchers=None):
         S = None
 
     # alpha and psi: only exist from 1, 2.., T
-    for t in Tau:
+    for t in T:
         for v in V:
             dummy_a_name = "[%d,%d]" % (v, t)
             alpha[v, t] = md.addVar(vtype="CONTINUOUS", lb=0.0, ub=1.0, name="alpha" + dummy_a_name)
@@ -235,7 +235,7 @@ def add_target_variables(md, g, deadline: int, searchers=None):
             else:
                 psi[v, t] = md.addVar(vtype="BINARY", name="psi" + dummy_a_name)
 
-    for t in Tau_ext:
+    for t in T_ext:
         for v in V_ext:
             dummy_b_name = "[%d,%d]" % (v, t)
             list_beta_name.append(dummy_b_name)
@@ -267,7 +267,7 @@ def add_searcher_constraints(md, g, my_vars: dict, start: list, vertices_t: dict
     Y = get_var(my_vars, 'y')
 
     S, m = ext.get_set_searchers(start)
-    Tau_ext = ext.get_set_ext_time(deadline)
+    Tau_ext = ext.get_set_time_u_0(deadline)
 
     # legality of the paths, for all s = {1,...m}
     for s in S:
@@ -328,7 +328,7 @@ def add_capture_constraints(md, g, my_vars: dict, searchers: dict, vertices_t, b
     S, m = ext.get_set_searchers(searchers)
 
     Tau = ext.get_set_time(deadline)
-    V_ext = ext.get_set_ext_vertices(g)
+    V_ext = ext.get_set_vertices_u_0(g)
 
     # initial belief (user input), t = 0 (Eq. 13)
     for i in V_ext:
@@ -428,7 +428,7 @@ def query_variables(md):
 
         elif 'beta' in my_var_name and '_s' not in my_var_name:
             # print('%s %g' % (my_var_name, my_var_value))
-            # remember b[0] is probability of capture
+            # remember: b[0] is probability of capture
             v = int(my_var_name[5:my_var_name.find(",")])
             t = int(my_var_name[my_var_name.find(",") + 1:my_var_name.rfind("]")])
             b_target[(v, t)] = my_var_value

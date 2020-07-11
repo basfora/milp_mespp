@@ -22,6 +22,7 @@ import numpy as np
 # --------------------
 # get sets
 # --------------------
+# UT-ok
 def get_set_searchers(info_input):
     """Return set of searchers,
      S = {1,...m}"""
@@ -38,7 +39,7 @@ def get_set_searchers(info_input):
         else:
             # x_s(s, v, t)
             m = get_m_from_tuple(info_input)
-            S = list(range(1, m+1))
+            S = list(range(1, m + 1))
 
     elif isinstance(info_input, int):
         m = info_input
@@ -50,10 +51,10 @@ def get_set_searchers(info_input):
     return S, m
 
 
+# UT-ok
 def get_m_from_tuple(my_dict: dict):
     """Get number of searchers from
-    triple tuple (s, v, t) or path(s, t)
-    UT-OK"""
+    triple tuple (s, v, t) or path(s, t)"""
 
     x_keys = my_dict.keys()
 
@@ -65,27 +66,29 @@ def get_m_from_tuple(my_dict: dict):
     return m
 
 
-def get_set_time(deadline):
+# UT-ok
+def get_set_time(deadline: int):
     """Return time-step set:
-     Tau = {1,2...T},  T = deadline"""
-    Tau = list(range(1, deadline + 1))
-    return Tau
+     T = {1,2...tau},  tau = deadline"""
+    T = list(range(1, deadline + 1))
+    return T
 
 
-def get_set_ext_time(time_input):
-    """Get time set with deadline + 1 {0, 1, 2, ... deadline}
-    (next step at final of simulation for dummy goal placement)"""
+# UT-ok
+def get_set_time_u_0(time_input):
+    """Get time set with 0 : {0, 1, 2, ... deadline}"""
     if isinstance(time_input, int):
-        Tau_ext = get_idx_time(time_input + 1)
-        return Tau_ext
+        T_ext = get_idx_time(time_input + 1)
+        return T_ext
     elif isinstance(time_input, list):
-        Tau_ext = time_input + [time_input[-1] + 1]
-        return Tau_ext
+        T_ext = [0] + time_input
+        return T_ext
     else:
         print('Wrong type of input, accepts integer or list')
         return None
 
 
+# UT-ok
 def get_set_vertices(g_or_n):
     """Get number of vertices from the graph, or just pass n itself
     Return set of graph vertices, V = {1, 2,...n}
@@ -102,52 +105,79 @@ def get_set_vertices(g_or_n):
     return V, n
 
 
-def get_set_ext_vertices(g):
+# UT-ok
+def get_h_from_tuple(my_dict: dict):
+    """time is always last item from tuple key
+    path[s, t] or x_s[s, v, t]"""
+
+    keys = my_dict.keys()
+
+    # list of times
+    all_t = [k[-1] for k in keys]
+
+    # max t
+    h = max(all_t)
+
+    return h
+
+
+# UT-ok
+def get_set_vertices_u_0(g_or_n):
     """Get indexes for the belief vector:"
     0: capture
     1,...n: vertices"""
 
-    n = len(g.vs)
+    if isinstance(g_or_n, int):
+        n = g_or_n
+    else:
+        n = len(g_or_n.vs)
+
     V = list(range(1, n + 1))
     V_ext = [0] + V
     return V_ext
 
 
-def get_position_list(searchers: dict):
+# UT-ok
+def get_searchers_positions(searchers: dict):
+    """Get current position of each searcher
+    Return list"""
 
-    start = []
+    s_pos = []
 
     # s_info or searchers
     for s_id in searchers.keys():
         s = searchers[s_id]
+        start_s = s.current_pos
+        s_pos.append(start_s)
 
-        # old form, extract from s_info
-        if isinstance(s, dict):
-            # TODO take out s_info once code is clean
-            start_s = s["start"]
-        else:
-            start_s = s.current_pos
-        start.append(start_s)
-
-    return start
+    return s_pos
 
 
-def get_sets_only(searcher_vector: list, deadline: int, g):
+# UT-ok
+def get_sets_only(g, searcher_input: list, deadline: int, ext=True):
 
-    S, m = get_set_searchers(searcher_vector)
-    Tau = get_set_ext_time(deadline)
+    S, m = get_set_searchers(searcher_input)
+    if ext:
+        T = get_set_time_u_0(deadline)
+    else:
+        T = get_set_time(deadline)
     V, n = get_set_vertices(g)
-    return S, V, n, Tau
+    return S, V, T
 
 
-def get_sets_and_ranges(g, m: int, horizon: int):
+# UT-ok
+def get_sets_and_ranges(g, searcher_input, deadline: int, ext=True):
 
-    S, m = get_set_searchers(m)
-    T = get_set_ext_time(horizon)
+    S, m = get_set_searchers(searcher_input)
+    if ext:
+        T = get_set_time_u_0(deadline)
+    else:
+        T = get_set_time(deadline)
     V, n = get_set_vertices(g)
-    return S, V, T, n, m
+    return S, V, T, m, n
 
 
+# UT-ok
 def get_v_left(g_or_n, v_list):
     """Return vertices from graph not in v_list"""
 
@@ -160,10 +190,11 @@ def get_v_left(g_or_n, v_list):
 # ---------------------
 # get indexes
 # ---------------------
-def get_idx_searchers(info_vector):
+def get_idx_searchers(info_input):
     """Return index of searchers (python style)
-         S_IDX = {0,...m-1}"""
-    m = len(info_vector)
+         S_IDX = {0,...m-1}
+         UT-ok"""
+    m = get_set_searchers(info_input)[1]
     S_ = list(range(0, m))
     return S_, m
 
@@ -709,14 +740,19 @@ def retrieve_graph(sim_data):
 # -----------------------
 # retrieve specific graphs
 # -----------------------
+# UT-ok
 def get_graph(graph_name):
     """Return graph, input can be string with the file name (reuse previous created graph),
      or a variable containing the graph itself"""
     # open file if its a string, or just pass the graph variable
+
+    if '.p' not in graph_name:
+        graph_name = add_extension(graph_name)
+
     if isinstance(graph_name, str):
-        graph_file = get_whole_path(graph_name, 'graphs')
+        graph_path = get_whole_path(graph_name, 'graphs')
         # get graph info: returns file object, mode read binary
-        infile = open(graph_file, 'rb')
+        infile = open(graph_path, 'rb')
         G = pickle.load(infile)
         infile.close()
     else:
@@ -724,73 +760,97 @@ def get_graph(graph_name):
     return G
 
 
+# UT-ok
+def add_extension(name: str, ext='p'):
+    file_name = name + '.' + ext
+
+    return file_name
+
+
+# UT-ok
 def get_graph_00():
-    """Load G7V7E test graph"""
-    graph_file = 'G7V7E.p'
+    """Load G7V_test graph"""
+
+    name = 'G7V_test'
+    graph_file = add_extension(name)
     g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_01():
     """Load Hollinger, 2009 middle graph from Fig 2 OFFICE"""
-    graph_name = 'G60V.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+
+    name = 'G60V'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_02():
     """Load 10x10 grid graph"""
-    graph_name = 'G100V_grid.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+
+    name = 'G100V_grid'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_03():
-    """Load 8x8 grid graph"""
-    graph_name = 'G256V_grid.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+    """Load 16x16 grid graph"""
+
+    name = 'G256V_grid'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_04():
     """Load 3x3 grid graph"""
-    graph_name = 'G9V_grid.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+
+    name = 'G9V_grid'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_05():
     """Load G20_home graph"""
-    graph_name = 'G20_home.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+
+    name = 'G20_home'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_06():
-    """Load G20_home graph"""
-    graph_name = 'G25_home.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+    """Load G25_home graph"""
+
+    name = 'G25_home'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
 
+# UT-ok
 def get_graph_07():
     """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
-    graph_name = 'G70V_OFFICE.p'
-    g = get_graph(graph_name)
-    g["name"] = graph_name
+
+    name = 'G70V'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
 
     return g
 
@@ -838,19 +898,6 @@ def get_from_tuple_key(k):
         return None
 
 
-def get_h(my_dict: dict):
-    """time is always last item from tuple key
-    path[s, t] or x_s[s, v, t]"""
-
-    keys = my_dict.keys()
-
-    # list of times
-    all_t = [k[-1] for k in keys]
-
-    # max t
-    t = max(all_t)
-
-    return t
 
 
 def create_2tuple_keys(list1, list2):
