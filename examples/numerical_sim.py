@@ -27,6 +27,7 @@ exp_inputs.set_zeta(0.3)
 # time stuff: deadline mission (tau), planning horizon (h), re-plan frequency (theta)
 exp_inputs.set_all_times(10)
 exp_inputs.set_theta(1)
+exp_inputs.set_timeout(5)
 
 # repetitions for each configuration
 exp_inputs.set_number_of_runs(100)

@@ -14,7 +14,7 @@ def get_vertices_and_steps(G, deadline, searchers):
     """Extract information from the user provided graph and information on searchers
     For each time step, find which vertices each searcher is allowed to be"""
 
-    start = ext.get_position_list(searchers)
+    start = ext.get_searchers_positions(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
     Tau = ext.get_set_time(deadline)
@@ -71,7 +71,7 @@ def get_vertices_and_steps_distributed(G, deadline, searchers, temp_s_path):
        For each time step, find which vertices each searcher is allowed to be
        Since this is the distributed version, use info on temporary searchers path (temp_s_path)"""
 
-    start = ext.get_position_list(searchers)
+    start = ext.get_searchers_positions(searchers)
     # S_ and Tau
     S, m = ext.get_set_searchers(start)
     Tau = ext.get_set_time(deadline)

@@ -8,7 +8,7 @@ from gurobipy import *
 def test_add_searcher_variables_x():
     """Test for expected X in simple graph"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0_searchers = [3, 1]
     deadline = 3
@@ -45,7 +45,7 @@ def test_add_searcher_variables_x():
 def test_add_searcher_variables_y():
     """Test for expected Y in simple graph"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0_searchers = [3, 1]
     deadline = 3
@@ -74,7 +74,7 @@ def test_add_searcher_variables_y():
 def test_add_target_variables_b():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     deadline = 3
 
@@ -95,7 +95,7 @@ def test_add_target_variables_b():
 def test_add_target_variables_alpha():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     deadline = 3
 
@@ -115,7 +115,7 @@ def test_add_target_variables_alpha():
 def test_get_var():
     """Test for expected B in simple graph"""
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     v0_searchers = [3, 1]
     deadline = 3
@@ -146,7 +146,7 @@ def test_get_var():
 
 def test_position_searchers():
     # load graph
-    graph_file = 'G7V7E.p'
+    graph_file = 'G7V_test.p'
     g = ext.get_graph(graph_file)
     # input for target initial vertices (belief)
     v_target = [7]

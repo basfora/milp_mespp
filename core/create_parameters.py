@@ -385,34 +385,6 @@ def searchers_start_together(m: int, v):
     return v_searchers
 
 
-def my_searchers_info(g, v0, capture_range=0, zeta=None):
-    """Give searchers info (dictionary with id number as keys).
-    Nested: initial position, capture matrices for each vertex"""
-    # get set of searchers based on initial vertex for searchers
-    S = ext.get_set_searchers(v0)[0]
-    # get graph vertices
-    V, n = ext.get_set_vertices(g)
-
-    # check to see if it's a vertex in the graph
-    if any(v0) not in V:
-        print("Vertex out of range, V = {1, 2...n}")
-        return None
-
-    # size of capture matrix
-    nu = n + 1
-    # create dict
-    searchers_info = {}
-    for s in S:
-        my_aux = {}
-        for v in V:
-            # loop through vertices to get capture matrices
-            C = MySearcher.rule_intercept(v, nu, capture_range, zeta, g)
-            my_aux[v] = C
-        idx = ext.get_python_idx(s)
-        searchers_info.update({s: {'start': v0[idx], 'c_matrix': my_aux, 'zeta': zeta}})
-    return searchers_info
-
-
 def create_dict_searchers(g, v0: list, capture_range=0, zeta=None):
     """Create searchers (dictionary with id number as keys).
             Nested: initial position, capture matrices for each vertex"""
@@ -681,7 +653,7 @@ def create_office_graph():
 def create_museum_graph():
     """MESPP paper, Fig 2, second graph (OFFICE)"""
     n_vertex = 70
-    ref = 'G' + str(n_vertex) + 'V' + '_OFFICE'
+    ref = 'G' + str(n_vertex) + 'V'
     graph_opt = 7
     g = my_graph(n_vertex, ref, graph_opt)
     save_graph(g, ref)
@@ -690,9 +662,9 @@ def create_museum_graph():
     return g
 
 
-def create_graph_test():
+def create_test_graph():
     n_vertex = 7
-    ref = 'G' + str(n_vertex) + 'V'
+    ref = 'G' + str(n_vertex) + 'V' + '_test'
     graph_opt = 1
     g = my_graph(n_vertex, ref, graph_opt)
     save_graph(g, ref)
@@ -700,6 +672,14 @@ def create_graph_test():
 
 
 if __name__ == "__main__":
-    create_graph_test()
+    # create graphs 1-7
+    create_test_graph()
+    create_office_graph()
+    create_grid_graph(10, 10)
+    create_grid_graph(16, 16)
+    create_grid_graph(3, 3)
+
+    create_museum_graph()
+
 
 

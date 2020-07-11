@@ -23,7 +23,7 @@ def plot_all_steps(g, name_folder: str, x_searchers: dict, b_target: dict, deadl
     """Plot both searchers and target graph in one figure
     add title and relevant text
     save the figure in specified name folder"""
-    tau_ext = ext.get_set_ext_time(deadline)
+    tau_ext = ext.get_set_time_u_0(deadline)
 
     # my_layout = g.layout("kk")
     my_layout = g.layout("tree")
@@ -222,7 +222,7 @@ def plot_and_show_sim_results(belief, target, searchers, sim_data, folder_name):
 
     # time info
     max_time = ext.get_last_info(target.stored_v_true)[0]
-    tau_ext = ext.get_set_ext_time(max_time)
+    tau_ext = ext.get_set_time_u_0(max_time)
 
     # capture info
     capture_time = target.capture_time
@@ -262,7 +262,7 @@ def plot_sim_results(belief, target, searchers, sim_data, folder_name):
 
     # time info
     max_time = ext.get_last_info(target.stored_v_true)[0]
-    tau_ext = ext.get_set_ext_time(max_time)
+    tau_ext = ext.get_set_time_u_0(max_time)
 
     # capture info
     capture_time = target.capture_time
