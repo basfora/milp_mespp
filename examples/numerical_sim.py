@@ -1,17 +1,10 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # start of header
-# add module to python path
-import sys
-import os
-
-import core.plot_fun
-
-this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(this_path)
-
 # import relevant modules
 from core import sim_fun as sf
+from core import plot_fun as pf
 from classes.inputs import MyInputs
+
 # end of header
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -57,7 +50,7 @@ for m in exp_inputs.list_m:
         today_run = exp_inputs.update_run_number()
         # if wanting to plot
         if turn < 1:
-            core.plot_fun.plot_sim_results(belief, target, searchers, sim_data, name_folder)
+            pf.plot_sim_results(belief, target, searchers, sim_data, name_folder)
 
         # delete things
         del belief, target, searchers, sim_data, name_folder

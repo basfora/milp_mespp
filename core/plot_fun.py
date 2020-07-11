@@ -1,16 +1,10 @@
-import os
+"""Plot functions for MILP MESPP"""
 
+import os
 from igraph import plot
 from matplotlib import pyplot as plt
-
 from core import extract_info as ext
 from core import milp_fun as mf
-
-
-# -----------------------------------------------------------------------------------------
-# Plot functions for MILP MESPP
-# -----------------------------------------------------------------------------------------
-from core.extract_info import retrieve_graph
 
 
 def show_me_results(md, g, name_folder: str, deadline: int):
@@ -215,7 +209,7 @@ def plot_and_show_sim_results(belief, target, searchers, sim_data, folder_name):
     turn into short video"""
 
     # graph file and layout
-    g, my_layout = retrieve_graph(sim_data)
+    g, my_layout = ext.retrieve_graph(sim_data)
 
     # data folder path
     folder_path = ext.get_whole_path(folder_name)
@@ -255,7 +249,7 @@ def plot_sim_results(belief, target, searchers, sim_data, folder_name):
     """Get information of the simulation from the classes
     assemble into frames for each time step"""
 
-    g, my_layout = retrieve_graph(sim_data)
+    g, my_layout = ext.retrieve_graph(sim_data)
 
     # data folder path
     folder_path = ext.get_whole_path(folder_name)

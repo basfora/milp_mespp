@@ -401,11 +401,11 @@ def get_name_code_folder(today_run: int, m_searcher, g, solver_type='central', z
 
     # graph used
     graph_number = ""
-    if g["name"] == 'G60V.p':
+    if g["name"] == 'G60V':
         graph_number = 1
-    elif g["name"] == 'G64V_grid.p':
+    elif g["name"] == 'G64V_grid':
         graph_number = 2
-    elif g["name"] == 'G256V_grid.p':
+    elif g["name"] == 'G256V_grid':
         graph_number = 3
 
     graph_used = 'G' + str(graph_number)
@@ -475,13 +475,13 @@ def get_codename(exp_input, folder_parent='data'):
 
     # graph used
     graph_number = ""
-    if g["name"] == 'G60V.p':
+    if g["name"] == 'G60V':
         # MUSEUM
         graph_number = 1
-    elif g["name"] == 'G100V_grid.p':
+    elif g["name"] == 'G100V_grid':
         # GRID 10x10
         graph_number = 2
-    elif g["name"] == 'G70V_OFFICE.p':
+    elif g["name"] == 'G70V':
         # OFFICE
         graph_number = 3
 
@@ -507,7 +507,7 @@ def get_codename(exp_input, folder_parent='data'):
     return name_folder, whole_path
 
 
-def get_name_folder(today_run: int):
+def get_codename_folder(today_run: int):
     """Give back the name of the folder
         which follows:
         today's date + _ + today's run
@@ -545,6 +545,66 @@ def get_whole_path(name_folder: str, option='data'):
     return whole_path
 
 
+def get_core_path():
+    """Return path of milp_mespp/core directory"""
+    # this file directory
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    return dir_path
+
+
+def get_project_path(proj_name='milp_mespp'):
+
+    project_level = False
+    project_path = None
+    this_dir = get_core_path()
+
+    while project_level is False:
+        end_of_path = this_dir.split('/')[-1]
+
+        if proj_name not in end_of_path:
+            this_dir = os.path.dirname(this_dir)
+        else:
+            project_path = this_dir
+            project_level = True
+
+    return project_path
+
+
+def folder_in_project(folder_name='data', proj_name='milp_mespp'):
+    """Check if folder is already in the project folder (milp_messp)
+    if not, create it"""
+
+    # TODO how to change the project name to use with milp_mespp_risk ?
+
+    # get project path
+    proj_path = get_project_path(proj_name)
+    # add folder to path
+    folder_path = proj_path + '/' + folder_name
+    # check if it exists, if not create it
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    # return true
+    return os.path.exists(folder_path)
+
+
+def path_exists(folder_path: str):
+    """Check if folder with this path already exists
+    If not, create it"""
+
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    else:
+        name_folder = folder_path.split('/')[-1]
+        print("Directory " + name_folder + " already exists")
+
+
+def get_folder_name(path: str):
+    """Isolate directory name"""
+    name_folder = path.split('/')[-1]
+    return name_folder
+
+
 def get_parent_folder(option='data'):
     # this file directory
     path1 = os.path.dirname(os.path.abspath(__file__))
@@ -572,7 +632,7 @@ def name_pickle_file(name_folder: str):
 def create_my_folder(today_run=0):
     """Create directory if it doesnt exist, return the name of the directory (not the path)"""
 
-    name_folder, whole_path = get_name_folder(today_run)
+    name_folder, whole_path = get_codename_folder(today_run)
 
     print(whole_path)
     # create new folder to save figures
@@ -900,8 +960,6 @@ def get_from_tuple_key(k):
         return None
 
 
-
-
 def create_2tuple_keys(list1, list2):
     seq = []
 
@@ -1017,3 +1075,7 @@ def this_folder(name_folder, parent_folder='data'):
 
     return f_path
 
+
+if __name__ == "__main__":
+    my_path = get_project_path()
+    print(my_path)

@@ -1,17 +1,9 @@
 
-# ---------------------------------------------------------------------------------------------------------------------
-# start of header
-# add module to python path
-import sys
 import os
 import pickle
 import numpy as np
-
-from scipy.stats import sem as sem_sp, t as t_sp, mean as mean_sp
-
-this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(this_path)
-
+import scipy
+from scipy.stats import sem as sem_sp, t as t_sp
 from classes.belief import MyBelief
 from core import extract_info as ext
 
@@ -44,7 +36,7 @@ solver_data.txt: file containing the solver results. 1st line time in seconds, 2
 
 def data_folder(folder_name='plot_data'):
 
-    project_folder = this_path
+    project_folder = ext.get_project_path()
     folder_data_path = project_folder + '/' + folder_name
 
     exp_configs = os.listdir(folder_data_path)
@@ -72,7 +64,7 @@ def data_folder(folder_name='plot_data'):
 
 def specific_from_data_folder(folder_names, folder_name='data_review'):
 
-    project_folder = this_path
+    project_folder = ext.get_project_path()
     folder_data_path = project_folder + '/' + folder_name
 
     exp_configs = os.listdir(folder_data_path)
@@ -341,7 +333,7 @@ def space():
 
 def get_single_file(folder='data', instance_n=11):
 
-    project_folder = this_path
+    project_folder = ext.get_project_path()
     folder_data_path = project_folder + '/' + folder
 
     all_subs = os.listdir(folder_data_path)
@@ -579,12 +571,12 @@ def compute_stats(sol_time_museum, sol_time_gridfn, sol_time_office):
             list_cpp.append(dic[cpp][h])
 
         # get average
-        my_avg, my_conf = pg.get_confidence(list_milp)
+        my_avg, my_conf = get_confidence(list_milp)
 
         sol_time_avg[milp] = my_avg
         sol_time_confidence[milp] = my_conf
 
-        my_avg, my_conf = pg.get_confidence(list_cpp)
+        my_avg, my_conf = get_confidence(list_cpp)
 
         sol_time_avg[cpp] = my_avg
         sol_time_confidence[cpp] = my_conf
@@ -857,7 +849,7 @@ def check_milp():
     list_ins = ['DH10S1G2FNMV_0513_011', 'DH10S3G2FNMV_0513_211', 'DH10S5G2FNMV_0513_460']
 
     for instance in list_ins:
-        my_path = this_path + '/' + folder_milp + '/' + instance
+        my_path = ext.get_project_path() + '/' + folder_milp + '/' + instance
 
         print('\n===================================\nTesting %s \n===================================' % instance)
 
@@ -943,9 +935,9 @@ def check_milp_vs_cpp_sum():
     list_ins = ['DH4S3G1TNSV_0512_023', 'DH4S3G1TNSV_0512_078', 'DH4S3G1TNSV_0512_103']
 
     for instance in list_ins:
-        my_path = this_path + '/' + folder_milp + '/' + instance
+        my_path = ext.get_project_path() + '/' + folder_milp + '/' + instance
 
-        path_cpp = this_path + '/' + folder_cpp + '/' + instance
+        path_cpp = ext.get_project_path() + '/' + folder_cpp + '/' + instance
 
         print('\n===================================\nTesting %s \n===================================' % instance)
 
@@ -1056,7 +1048,7 @@ def get_confidence(some_list: list):
 
     for i in range(0, max_j):
         n = len(some_list[i])
-        m_i = mean_sp(some_list[i][:])
+        m_i = scipy.mean(some_list[i][:])
         std_err = sem_sp(some_list[i][:])
         h = std_err * t_sp.ppf((1 + confidence) / 2, n - 1)
 
@@ -1064,7 +1056,6 @@ def get_confidence(some_list: list):
         y_err.append(h)
 
     return m, y_err
-
 
 
 if __name__ == "__main__":

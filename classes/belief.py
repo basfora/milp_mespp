@@ -1,3 +1,5 @@
+"""Belief class for MILP MESPP"""
+
 from core import construct_model as cm
 from core import extract_info as ext
 

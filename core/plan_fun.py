@@ -6,7 +6,6 @@
 
 from core import extract_info as ext, milp_fun as mf, construct_model as cm
 from core import create_parameters as cp
-from classes.inputs import MyInputs
 from gurobipy import *
 
 

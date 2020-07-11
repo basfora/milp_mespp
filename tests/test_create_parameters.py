@@ -58,7 +58,7 @@ def test_markovian_matrix():
 
 
 def test_capture_range():
-    graph_file = 'G64V_grid.p'
+    graph_file = 'G64V_grid'
     g = ext.get_graph(graph_file)
 
     v_target = [1, 2, 3]

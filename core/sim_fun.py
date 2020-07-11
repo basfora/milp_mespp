@@ -5,6 +5,7 @@ from core import plan_fun as pln
 
 import pickle
 import random
+import os
 
 
 def run_simulator(specs=None):
@@ -121,6 +122,8 @@ def create_save_pickle(belief, target, searchers, solver_data, name_folder: str,
 
     # name the pickle file
     file_path = ext.get_whole_path(name_folder, parent_folder)
+    if not os.path.exists(file_path):
+        os.mkdir(file_path)
     file_name = 'global_save.txt'
     full_path = file_path + "/" + file_name
 

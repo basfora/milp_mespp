@@ -1,6 +1,5 @@
 import datetime
 from core import extract_info as ext
-import os
 
 
 class MyInputs:
@@ -151,15 +150,13 @@ class MyInputs:
 
     def create_folder(self, folder_parent='data'):
 
+        ext.folder_in_project(folder_parent)
+
         # create name with code
         name_folder, whole_path = ext.get_codename(self, folder_parent)
 
-        # print(whole_path)
-        # create new folder to save figures
-        if not os.path.exists(whole_path):
-            os.mkdir(whole_path)
-        else:
-            print("Directory " + name_folder + " already exists")
+        # create new folder to save data
+        ext.path_exists(whole_path)
 
         self.name_folder = name_folder
         return name_folder

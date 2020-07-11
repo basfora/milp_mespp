@@ -240,6 +240,24 @@ def test_get_graph():
     assert n7 == 70
 
 
+def test_folder_path():
+
+    bea_proj = '/home/beatriz/PyCharmProjects/milp_mespp'
+    bea_dir = bea_proj + '/' + 'core'
+    folder_name = 'data'
+
+    project_path = ext.get_project_path()
+    dir_path = ext.get_core_path()
+    yes = ext.folder_in_project(folder_name)
+
+    assert project_path == bea_proj
+    assert dir_path == bea_dir
+    assert yes is True
+
+
+
+
+
 
 
 
