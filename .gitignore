@@ -129,10 +129,6 @@ dmypy.json
 .pyre/
 # ------------------------------------------------
 # folders not to upload
-core/deprecated/
-core/make_graphs/
-experiments/
-.idea/
 
 # saved files
 *.pdf

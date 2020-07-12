@@ -677,6 +677,7 @@ if __name__ == "__main__":
     create_office_graph()
     create_grid_graph(10, 10)
     create_grid_graph(16, 16)
+    create_grid_graph(8, 8)
     create_grid_graph(3, 3)
     create_museum_graph()
 
