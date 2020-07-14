@@ -21,7 +21,7 @@ def run_simulator(specs=None):
     return belief, target, searchers, solver_data
 
 
-def simulator_main(specs):
+def simulator_main(specs, printout=True):
 
     # extract inputs for the problem instance
     timeout = specs.timeout
@@ -53,18 +53,21 @@ def simulator_main(specs):
             # check if it's time to re-plan (OBS: it will plan on t = 0)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new,
+            obj_fun, time_sol, gap, x_s, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new,
                                                                                     M, gamma, solver_type, timeout)
 
             # save the new data
-            solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, t)
+            solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_s, b_target, t)
 
             # break here if the problem was infeasible
             if time_sol is None or gap is None or obj_fun is None:
                 break
 
-            # get position of each searcher at each time-step based on x[s, v, t] variable
-            searchers, path = pln.update_plan(searchers, x_searchers)
+            # get position of each searcher at each time-step based on x[s, v, t] variable to path [s, t] = v
+            searchers, path = pln.update_plan(searchers, x_s)
+
+            if printout:
+                pln.print_path(x_s)
 
             # reset time-steps of planning
             t_plan = 1
@@ -81,6 +84,10 @@ def simulator_main(specs):
 
         # update target
         target = evolve_target(target, belief.new)
+
+        if printout:
+            print('t = %d' % t)
+            print_positions(searchers, target)
 
         # next time-step
         t, t_plan = t + 1, t_plan + 1
@@ -107,6 +114,19 @@ def simulator_main(specs):
 
 
 # auxiliary functions
+def print_positions(searchers, target):
+    """Print current searchers and target's position"""
+
+    print('Target vertex: %d' % target.current_pos)
+
+    for s_id in searchers.keys():
+        s = searchers[s_id]
+        print('Searcher %d: vertex %d' % (s_id, s.current_pos), sep=' ', end=' ', flush=True)
+    print('\n')
+
+    return
+
+
 def print_capture_details(t, target, searchers, solver_data):
     """Print capture details on terminal"""
     print("\nCapture details: \ntime = " + str(t), "\nvertex = " + str(target.capture_v),

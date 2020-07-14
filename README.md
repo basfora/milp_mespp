@@ -71,8 +71,21 @@ sudo python3 setup.py install
 
 ## Troubleshooting
 
+Make sure things are working by running sim_fun.py (it will run the simulator with default values). 
+You should see this in the terminal (actual vertex numbers may vary):
 
+```
+Planned path: 
+Searcher 1: [27, 54, 53, 58, 44, 45, 46, 47, 47, 47, 48]
+t = 0
+Target vertex: 13
+Searcher 1: vertex 54 
+````
 
+## Examples
+
+Checkout examples/numerical_sim for a sample on how to change specs and run multiple instances. 
+The plots will be saved in a milp_mespp/data
 
 ## Author
 Beatriz Asfora

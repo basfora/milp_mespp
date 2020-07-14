@@ -9,7 +9,7 @@ from core import create_parameters as cp
 from gurobipy import *
 
 
-def run_planner(specs=None):
+def run_planner(specs=None, printout=True):
     """Initialize the planner the pre-set parameters
         Return path of searchers as list"""
 
@@ -28,6 +28,9 @@ def run_planner(specs=None):
     searchers, path_dict = update_plan(searchers, x_s)
 
     path_list = path_as_list(path_dict)
+
+    if printout:
+        print_path(x_s)
 
     return path_list
 
@@ -310,6 +313,7 @@ def print_path(x_s: dict):
     pi_dict = xs_to_path(x_s)
     path = path_as_list(pi_dict)
 
+    print('--\nPlanned path: ')
     for s in path.keys():
         path_s = path[s]
         print("Searcher %d: %s" % (s, path_s))
