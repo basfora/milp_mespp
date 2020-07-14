@@ -84,8 +84,8 @@ Searcher 1: vertex 54
 
 ## Examples
 
-Checkout examples/numerical_sim for a sample on how to change specs and run multiple instances. 
-The plots will be saved in a milp_mespp/data
+To learn how to change specs and run multiple instances, check: examples/numerical_sim. 
+Note plots will be saved in a milp_mespp/data folder (created the first time you run numerical_sim.py).
 
 ## Author
 Beatriz Asfora
