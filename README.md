@@ -34,14 +34,14 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
 
 
 ### External Python Libraries
-Project uses: datetime, os, pickle, random, numpy, matplotlib, igraph, gurobipy
+Project uses: datetime, os, pickle, numpy, matplotlib, igraph, gurobipy
 
 ### Installing commonly used libraries
 Run on terminal:
 ```
 python3 -m pip install -U matplotlib
 python3 -m pip install -U numpy
-python3 -m pip install -U random
+python3 -m pip install -U pytest
 sudo apt-get install build-essential
 sudo apt-get install python3.6-dev
 ```
@@ -60,19 +60,20 @@ sudo apt-get install bison flex
 python3 -m pip install python-igraph
 ```
 ### Installing gurobipy
-License and installation instructions [here](https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
+Gurobi License and installation instructions [here](https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
 > Important: changing default saving location of license file will cause errors. 
 
-If you are using PyCharm, you might need to also run on PyCharm's terminal:
+To install gurobipy, run:
 ```
 cd path-to-folder/gurobi902/linux64/
 sudo python3 setup.py install
 ```
+> If you are using PyCharm, you might need to also run on PyCharm's terminal
 
 ## Troubleshooting
 
-Make sure things are working by running sim_fun.py (it will run the simulator with default values). 
-You should see this in the terminal (actual vertex numbers may vary):
+Make sure things are working by running the run the simulator with default values.
+Run _core/sim_fun.py_. You should see this in the terminal (actual vertex numbers may vary):
 
 ```
 Planned path: 

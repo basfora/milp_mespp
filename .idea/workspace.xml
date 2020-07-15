@@ -19,9 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="484eac37-3c75-405f-8f4d-6e5f80107631" name="Default Changelist" comment="init">
-      <change beforePath="$PROJECT_DIR$/core/plan_fun.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/plan_fun.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/sim_fun.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/sim_fun.py" afterDir="false" />
+    <list default="true" id="484eac37-3c75-405f-8f4d-6e5f80107631" name="Default Changelist" comment="readme">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_script.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,8 +49,8 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../milp_mespp_risk" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../multiRobotTargetSearch" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.sim_fun">
     <configuration name="__init__ (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -156,8 +161,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.sim_fun" />
-        <item itemvalue="Python.plan_fun" />
         <item itemvalue="Python.__init__ (1)" />
+        <item itemvalue="Python.plan_fun" />
         <item itemvalue="Python.numerical_sim" />
         <item itemvalue="Python.create_parameters" />
       </list>
@@ -181,7 +186,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594513662271</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="readme">
+      <created>1594768867973</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1594768867973</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -198,37 +210,43 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init" />
-    <option name="LAST_COMMIT_MESSAGE" value="init" />
+    <MESSAGE value="readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="readme" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="2696" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1594514274468">
+    <state x="2696" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1594831115751">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state x="2696" y="310" width="424" height="484" key="FileChooserDialogImpl/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594514274468" />
-    <state width="1830" height="319" key="GridCell.Tab.0.bottom" timestamp="1594768605482">
+    <state x="2696" y="310" width="424" height="484" key="FileChooserDialogImpl/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594831115751" />
+    <state width="1830" height="319" key="GridCell.Tab.0.bottom" timestamp="1594834213187">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state width="1830" height="319" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594768605482" />
-    <state width="1830" height="319" key="GridCell.Tab.0.center" timestamp="1594768605482">
+    <state width="1830" height="319" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594834213187" />
+    <state width="1830" height="319" key="GridCell.Tab.0.center" timestamp="1594834213187">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state width="1830" height="319" key="GridCell.Tab.0.center/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594768605482" />
-    <state width="1830" height="319" key="GridCell.Tab.0.left" timestamp="1594768605482">
+    <state width="1830" height="319" key="GridCell.Tab.0.center/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594834213187" />
+    <state width="1830" height="319" key="GridCell.Tab.0.left" timestamp="1594834213186">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state width="1830" height="319" key="GridCell.Tab.0.left/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594768605482" />
-    <state width="1830" height="319" key="GridCell.Tab.0.right" timestamp="1594768605482">
+    <state width="1830" height="319" key="GridCell.Tab.0.left/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594834213186" />
+    <state width="1830" height="319" key="GridCell.Tab.0.right" timestamp="1594834213187">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state width="1830" height="319" key="GridCell.Tab.0.right/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594768605482" />
-    <state x="2402" y="187" key="SettingsEditor" timestamp="1594514230438">
+    <state width="1830" height="319" key="GridCell.Tab.0.right/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594834213187" />
+    <state x="2402" y="187" key="SettingsEditor" timestamp="1594832800208">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
-    <state x="2402" y="187" key="SettingsEditor/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594514230438" />
-    <state x="555" y="261" width="800" height="556" key="Vcs.Push.Dialog.v2" timestamp="1594513663608">
-      <screen x="0" y="27" width="1920" height="1053" />
+    <state x="2402" y="187" key="SettingsEditor/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594832800208" />
+    <state x="2475" y="240" width="800" height="556" key="Vcs.Push.Dialog.v2" timestamp="1594768869659">
+      <screen x="1920" y="0" width="1920" height="1080" />
     </state>
     <state x="555" y="261" width="800" height="556" key="Vcs.Push.Dialog.v2/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1594513663608" />
+    <state x="2475" y="240" key="Vcs.Push.Dialog.v2/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594768869659" />
+    <state x="2523" y="166" width="770" height="773" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1594833299492">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2523" y="166" width="770" height="773" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1594833299492" />
     <state x="2684" y="467" width="448" height="170" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1594514324081">
       <screen x="1920" y="0" width="1920" height="1080" />
     </state>
