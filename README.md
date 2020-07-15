@@ -31,7 +31,13 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
 
 
 ## Installation Guide
+It's advisable to create a virtual environment for this project:
 
+```
+cd milp_mespp
+python3 -m venv vmilp
+source vmilp/bin/activate
+```
 
 ### Python Libraries
 Project uses: datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy
