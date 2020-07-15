@@ -33,8 +33,8 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
 ## Installation Guide
 
 
-### External Python Libraries
-Project uses: datetime, os, pickle, numpy, matplotlib, igraph, gurobipy
+### Python Libraries
+Project uses: datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy
 
 ### Installing commonly used libraries
 Run on terminal:
@@ -68,12 +68,32 @@ To install gurobipy, run:
 cd path-to-folder/gurobi902/linux64/
 sudo python3 setup.py install
 ```
+> Change Gurobi version and OS accordingly
 > If you are using PyCharm, you might need to also run on PyCharm's terminal
+
+### Installing this package
+
+Make sure you have the latest version of the libraries:
+```
+sudo apt-get update
+```
+
+From inside the `milp_mespp` folder:
+
+```
+python3 setup.py install
+```
+
 
 ## Troubleshooting
 
 Make sure things are working by running the run the simulator with default values.
-Run _core/sim_fun.py_. You should see this in the terminal (actual vertex numbers may vary):
+```
+cd milp_mespp/core
+python3 sim_fun.py
+```
+
+You should see this in the terminal (actual vertex numbers may vary):
 
 ```
 Planned path: 
@@ -81,12 +101,13 @@ Searcher 1: [27, 54, 53, 58, 44, 45, 46, 47, 47, 47, 48]
 t = 0
 Target vertex: 13
 Searcher 1: vertex 54 
-````
+```
 
 ## Examples
 
-To learn how to change specs and run multiple instances, check: examples/numerical_sim. 
-Note plots will be saved in a milp_mespp/data folder (created the first time you run numerical_sim.py).
+To learn how to change specs and run multiple instances, run `examples/numerical_sim`.
+
+> Data and plots will be saved in a milp_mespp/data folder (created the first time you run numerical_sim.py).
 
 ## Author
 Beatriz Asfora

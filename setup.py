@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     my_long_description = fh.read()
 
 setuptools.setup(name='milp_mespp',
-                 version='0.0.2',
+                 version='0.0.1',
                  url='https://github.com/basfora/milp_mespp.git',
                  author='Beatriz A. Asfora',
                  author_email='beatriz.asfora@gmail.com',
