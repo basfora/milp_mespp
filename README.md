@@ -69,12 +69,11 @@ python3 -m pip install python-igraph
 Gurobi License and installation instructions [here](https://www.gurobi.com/documentation/9.0/quickstart_linux/index.html) <br />
 > Important: changing default saving location of license file will cause errors. 
 
-To install gurobipy, run:
+To install gurobipy, run (change version and OS accordingly):
 ```
 cd path-to-folder/gurobi902/linux64/
 sudo python3 setup.py install
 ```
-> Change Gurobi version and OS accordingly
 > If you are using PyCharm, you might need to also run on PyCharm's terminal
 
 ### Installing this package
@@ -87,7 +86,7 @@ sudo apt-get update
 From inside the `milp_mespp` folder:
 
 ```
-python3 setup.py install
+sudo python3 setup.py install
 ```
 
 

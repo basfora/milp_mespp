@@ -1,6 +1,6 @@
 """Create parameters for the problem instance"""
 
-from core import extract_info as ext
+import extract_info as ext
 from classes.searcher import MySearcher
 from classes.belief import MyBelief
 from classes.target import MyTarget

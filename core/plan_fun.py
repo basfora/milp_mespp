@@ -4,8 +4,8 @@
 - run_solver
 """
 
-from core import extract_info as ext, milp_fun as mf, construct_model as cm
-from core import create_parameters as cp
+import extract_info as ext, milp_fun as mf, construct_model as cm
+import create_parameters as cp
 from gurobipy import *
 
 

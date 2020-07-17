@@ -5,7 +5,7 @@ Functions:
  - Target motion: probability matrix, get true starting position
  - Belief: update equation
  - """
-from core import extract_info as ext
+import extract_info as ext
 import numpy as np
 
 
