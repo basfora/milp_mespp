@@ -74,6 +74,11 @@ def simulator_main(specs, printout=True):
 
         # _________________
 
+        if printout:
+            # print current positions
+            print('t = %d' % t)
+            print_positions(searchers, target)
+
         path_next_t = pln.next_from_path(path, t_plan)
 
         # evolve searcher position
@@ -85,15 +90,16 @@ def simulator_main(specs, printout=True):
         # update target
         target = evolve_target(target, belief.new)
 
-        if printout:
-            print('t = %d' % t)
-            print_positions(searchers, target)
-
         # next time-step
         t, t_plan = t + 1, t_plan + 1
 
         # check for capture based on next position of vertex and searchers
         searchers, target = check_for_capture(searchers, target)
+
+        if (t == deadline) and printout:
+            print('--\nTime step %d\n--' % deadline)
+            print('t = %d' % t)
+            print_positions(searchers, target)
 
         if target.is_captured:
             print_capture_details(t, target, searchers, solver_data)
@@ -210,3 +216,4 @@ def evolve_target(target, updated_belief: list):
 
 if __name__ == "__main__":
     belief_obj, target_obj, searchers_obj, solver_data_obj = run_simulator()
+

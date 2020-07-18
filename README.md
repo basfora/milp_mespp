@@ -75,7 +75,7 @@ Searcher 1: vertex 54
 . . .
 ```
 --
-t = 9
+t = 10
 Target vertex: 49
 Searcher 1: vertex 48 
 
@@ -139,15 +139,8 @@ cd milp_mespp/core
 python3 sim_fun.py
 ```
 
-You should see this in the terminal (actual vertex numbers may vary):
+You should see the same output as with the install script (see above).
 
-```
-Planned path: 
-Searcher 1: [27, 54, 53, 58, 44, 45, 46, 47, 47, 47, 48]
-t = 0
-Target vertex: 13
-Searcher 1: vertex 54 
-```
 
 ## Author
 Beatriz Asfora
