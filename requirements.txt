@@ -1,6 +1,6 @@
-gurobipy~=9.0.2
-matplotlib~=3.2.1
-numpy~=1.18.4
-scipy~=1.5.0
-pytest~=5.4.3
-setuptools~=39.0.1
+gurobipy>=8.0.2
+matplotlib>=3.0
+numpy>=1.18
+scipy>=1.5.0
+pytest>=5.4.0
+setuptools>=39.0
