@@ -4,8 +4,8 @@
 - run_solver
 """
 
-import extract_info as ext, milp_fun as mf, construct_model as cm
-import create_parameters as cp
+from core import extract_info as ext, milp_fun as mf, construct_model as cm
+from core import create_parameters as cp
 from gurobipy import *
 
 
@@ -395,4 +395,5 @@ def searchers_evolve(searchers, new_pos):
 
 
 if __name__ == "__main__":
+    import add_to_path
     planned_path = run_planner()

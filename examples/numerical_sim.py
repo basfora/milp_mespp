@@ -1,5 +1,12 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # start of header
+import sys
+import sys
+print(sys.path)
+# import os
+#
+# this_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.insert(0, this_path)
 # import relevant modules
 from core import sim_fun as sf
 from core import plot_fun as pf

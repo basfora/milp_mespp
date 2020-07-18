@@ -13,8 +13,8 @@ capture matrix: first index is zero [0][0], first vertex is [1][1]
 v0 can be {1,...n} --> I convert to python indexing later
 array order: [s, t, v, u]"""
 
-import extract_info as ext
-import construct_model as cm
+from core import extract_info as ext
+from core import construct_model as cm
 from gurobipy import *
 
 

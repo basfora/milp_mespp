@@ -1,3 +1,4 @@
+import add_to_path
 from core import plan_fun as pln
 from core import construct_model as cm
 from core import create_parameters as cp
@@ -8,7 +9,6 @@ from classes.inputs import MyInputs
 from classes.solver_data import MySolverData
 from classes.belief import MyBelief
 from classes.target import MyTarget
-from gurobipy import *
 
 
 def parameters_sim():

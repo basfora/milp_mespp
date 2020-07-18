@@ -1,5 +1,5 @@
 import pytest
-
+import add_to_path
 from core import plan_fun as pln
 from core import construct_model as cm
 from core import create_parameters as cp

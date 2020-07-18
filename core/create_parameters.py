@@ -1,6 +1,6 @@
 """Create parameters for the problem instance"""
 
-import extract_info as ext
+from core import extract_info as ext
 from classes.searcher import MySearcher
 from classes.belief import MyBelief
 from classes.target import MyTarget
@@ -672,6 +672,7 @@ def create_test_graph():
 
 
 if __name__ == "__main__":
+    import add_to_path
     # create graphs 1-5, 7
     create_test_graph()
     create_office_graph()

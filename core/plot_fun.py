@@ -3,8 +3,8 @@
 import os
 from igraph import plot
 from matplotlib import pyplot as plt
-import extract_info as ext
-import milp_fun as mf
+from core import extract_info as ext
+from core import milp_fun as mf
 
 
 def show_me_results(md, g, name_folder: str, deadline: int):

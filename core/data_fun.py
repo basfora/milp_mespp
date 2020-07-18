@@ -5,7 +5,7 @@ import numpy as np
 import scipy
 from scipy.stats import sem as sem_sp, t as t_sp
 from classes.belief import MyBelief
-import extract_info as ext
+from core import extract_info as ext
 
 """start.txt : 
 1st line, planning horizon; 2nd line, the discount factor; 3rd line, the number of graph vertices; 
@@ -1059,6 +1059,7 @@ def get_confidence(some_list: list):
 
 
 if __name__ == "__main__":
+    import add_to_path
     # my_script()
     # find_inf()
     # check_sol()

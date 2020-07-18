@@ -66,6 +66,7 @@ def get_m_from_tuple(my_dict: dict):
     return m
 
 
+
 # UT-ok
 def get_set_time(deadline: int):
     """Return time-step set:
@@ -1077,5 +1078,6 @@ def this_folder(name_folder, parent_folder='data'):
 
 
 if __name__ == "__main__":
+    import add_to_path
     my_path = get_project_path()
     print(my_path)
