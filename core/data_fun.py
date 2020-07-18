@@ -1059,7 +1059,7 @@ def get_confidence(some_list: list):
 
 
 if __name__ == "__main__":
-    import add_to_path
+
     # my_script()
     # find_inf()
     # check_sol()

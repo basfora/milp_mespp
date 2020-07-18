@@ -1,4 +1,4 @@
-import add_to_path
+
 from core import construct_model as cm
 from core import create_parameters as cp
 from core import extract_info as ext

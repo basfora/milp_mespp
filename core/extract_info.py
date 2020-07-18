@@ -1078,6 +1078,6 @@ def this_folder(name_folder, parent_folder='data'):
 
 
 if __name__ == "__main__":
-    import add_to_path
+
     my_path = get_project_path()
     print(my_path)

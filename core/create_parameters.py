@@ -672,7 +672,7 @@ def create_test_graph():
 
 
 if __name__ == "__main__":
-    import add_to_path
+
     # create graphs 1-5, 7
     create_test_graph()
     create_office_graph()

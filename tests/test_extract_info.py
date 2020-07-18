@@ -1,5 +1,5 @@
 import pytest
-import add_to_path
+
 from core import extract_info as ext
 from core import create_parameters as cp
 

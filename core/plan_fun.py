@@ -395,5 +395,5 @@ def searchers_evolve(searchers, new_pos):
 
 
 if __name__ == "__main__":
-    import add_to_path
+
     planned_path = run_planner()
