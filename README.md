@@ -72,7 +72,7 @@ t = 0
 Target vertex: 13
 Searcher 1: vertex 54 
 ```
-(...)
+. . .
 ```
 --
 t = 9
@@ -81,7 +81,7 @@ Searcher 1: vertex 48
 
 ```
 
-This means both the planner and simulator are working and your installation is complete.
+This means both the planner and simulator are working, and your installation is complete.
 
 ## Examples
 
