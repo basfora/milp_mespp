@@ -5,6 +5,7 @@ python3 -m pip install -U numpy
 python3 -m pip install -U pytest
 sudo apt-get install build-essential
 sudo apt-get install python3.6-dev
+sudo apt-get install ffmpeg
 
 # install igraph
 sudo apt-get install bison flex

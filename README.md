@@ -146,7 +146,7 @@ You should see the same output as with the install script (see above).
 Beatriz Asfora
 
 ## Acknowledgements
-Dr. Jacobo Banfi <br />
+Dr. Jacopo Banfi <br />
 Prof. Mark Campbell
 
 

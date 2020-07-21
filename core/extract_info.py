@@ -66,7 +66,6 @@ def get_m_from_tuple(my_dict: dict):
     return m
 
 
-
 # UT-ok
 def get_set_time(deadline: int):
     """Return time-step set:
@@ -508,7 +507,7 @@ def get_codename(exp_input, folder_parent='data'):
     return name_folder, whole_path
 
 
-def get_codename_folder(today_run: int):
+def get_date_folder(today_run: int):
     """Give back the name of the folder
         which follows:
         today's date + _ + today's run
@@ -633,7 +632,7 @@ def name_pickle_file(name_folder: str):
 def create_my_folder(today_run=0):
     """Create directory if it doesnt exist, return the name of the directory (not the path)"""
 
-    name_folder, whole_path = get_codename_folder(today_run)
+    name_folder, whole_path = get_date_folder(today_run)
 
     print(whole_path)
     # create new folder to save figures
