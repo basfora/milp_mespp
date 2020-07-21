@@ -571,6 +571,14 @@ def get_project_path(proj_name='milp_mespp'):
     return project_path
 
 
+def get_outside_path(name_folder, parent_folder='r_data', module_name='milp_risk'):
+    """Get folder path outside milp_mespp"""
+
+    master_path = os.path.dirname(get_project_path())
+    path1 = master_path + '/' + module_name + '/' + parent_folder + '/' + name_folder
+    return path1
+
+
 def folder_in_project(folder_name='data', proj_name='milp_mespp'):
     """Check if folder is already in the project folder (milp_messp)
     if not, create it"""
