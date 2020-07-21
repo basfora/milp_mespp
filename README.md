@@ -81,7 +81,16 @@ Searcher 1: vertex 48
 
 ```
 
-This means both the planner and simulator are working, and your installation is complete.
+This means both the planner and simulator are working.
+
+Source your `.bashrc` file, by running on terminal:
+
+```
+source ~/.bashrc
+```
+
+Your installation is now complete.
+
 
 ## Examples
 
