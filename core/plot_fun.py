@@ -201,7 +201,7 @@ def delete_frames(path_to_folder: str, key_name='frame'):
 
 
 # -----------------------------------------------------------------------------------------
-# Plot functions for MILP MESPP MOVED
+# Plot functions for MILP MESPP
 # -----------------------------------------------------------------------------------------
 
 def plot_and_show_sim_results(belief, target, searchers, sim_data, folder_name):
@@ -209,7 +209,7 @@ def plot_and_show_sim_results(belief, target, searchers, sim_data, folder_name):
     turn into short video"""
 
     # graph file and layout
-    g, my_layout = ext.retrieve_graph(sim_data)
+    g, my_layout = sim_data.retrieve_graph()
 
     # data folder path
     folder_path = ext.get_whole_path(folder_name)
@@ -249,7 +249,7 @@ def plot_sim_results(belief, target, searchers, sim_data, folder_name):
     """Get information of the simulation from the classes
     assemble into frames for each time step"""
 
-    g, my_layout = ext.retrieve_graph(sim_data)
+    g, my_layout = sim_data.retrieve_graph()
 
     # data folder path
     folder_path = ext.get_whole_path(folder_name)
@@ -309,10 +309,15 @@ def plot_searchers_and_target(g, folder_path, my_layout, target, searchers, t):
     return name_file
 
 
-def mount_sim_frame(s_file: str, tgt_file: str, folder_path: str, b_0, t: int, capture_info: list, n_frame_per=60):
+def mount_sim_frame(s_file: str, tgt_file: str, folder_path: str, b_0, t: int, capture_info: list or None, n_frame_per=60):
 
-    # unpack capture info
-    capture_time, vertex_cap, captor = capture_info
+    if capture_info is not None:
+        # unpack capture info
+        capture_time, vertex_cap, captor = capture_info
+    else:
+        capture_time = t + 1
+        vertex_cap = None
+        captor = None
 
     im_1 = plt.imread(s_file)
     im_2 = plt.imread(tgt_file)
@@ -379,7 +384,7 @@ def mount_sim_frame(s_file: str, tgt_file: str, folder_path: str, b_0, t: int, c
     plt.close('all')
 
 
-def plot_target_belief2(g, folder_path, my_layout, b_target: dict, t: int):
+def plot_target_belief2(g, folder_path, my_layout, b_target: dict, t: int, true_pos=None):
     """Plot target belief"""
     V, n = ext.get_set_vertices(g)
 
@@ -413,9 +418,66 @@ def plot_target_belief2(g, folder_path, my_layout, b_target: dict, t: int):
                 c = b/1
             my_color = get_color_belief(rgba_color, c)
 
+        if true_pos is not None:
+            if v == true_pos:
+                my_color = "red"
+
         g.vs[v_idx]["color"] = my_color
     name_file = folder_path + "/" + g["name"] + "_tgt_t" + str(t) + ".png"
     plot(g, name_file, layout=my_layout, figsize=(3, 3), bbox=(400, 400), margin=15, dpi=400)
     plt.close()
 
     return name_file
+
+
+def plot_plan_results(solver_data, folder_name, target_start=0):
+    """Plot graph with
+    initial searchers position, path planned
+    initial target belief (red), belief evolution (pink)
+    """
+
+    g, my_layout = solver_data.retrieve_graph()
+
+    # data folder path
+    folder_path = ext.get_whole_path(folder_name)
+
+    # time info
+    h = solver_data.horizon[0]
+    H_ext = ext.get_set_time_u_0(h)
+
+    # initial configuration
+
+    print("Starting plots")
+    t_plan = 0
+    for t in H_ext:
+        # get belief vector at that time
+        b_target = solver_data.retrieve_solver_belief(t_plan, t)
+        # get b_c (belief of capture)
+        b_c = b_target[0]
+        # plot belief
+        tgt_file = plot_target_belief2(g, folder_path, my_layout, b_target, t, target_start)
+
+        # plot searchers
+        # get vertices list of path[t]
+        pi = solver_data.retrieve_occupied_vertices(t_plan, t)
+        s_file = plot_searchers_only(g, folder_path, my_layout, pi, t)
+        # assemble it nicely
+        mount_sim_frame(s_file, tgt_file, folder_path, b_c, t, None, 1)
+    delete_frames(folder_path, 'G')
+    return
+
+
+def plot_searchers_only(g, folder_path, my_layout, pi: list, t: int):
+
+    for v in pi:
+        v_idx = ext.get_python_idx(v)
+        g.vs[v_idx]["color"] = "blue"
+
+    name_file = folder_path + "/" + g["name"] + "_t" + str(t) + ".png"
+    plot(g, name_file, layout=my_layout, figsize=(3, 3), bbox=(400, 400), margin=15, dpi=400)
+    plt.close()
+    return name_file
+
+
+
+

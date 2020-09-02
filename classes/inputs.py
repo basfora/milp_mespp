@@ -63,30 +63,33 @@ class MyInputs:
         self.runs_per_m = 20
         self.list_turns = list(range(self.today_run - 1, self.runs_per_m))
 
-    def set_graph(self, graph_number: int):
+    def set_graph(self, graph_number_or_file):
 
-        if graph_number == 0:
-            self.graph = ext.get_graph_00()
-        elif graph_number == 1:
-            # OFFICE
-            self.graph = ext.get_graph_01()
-        elif graph_number == 2:
-            # GRID 10x10
-            self.graph = ext.get_graph_02()
-        elif graph_number == 3:
-            # GRID 8x8
-            self.graph = ext.get_graph_03()
-        elif graph_number == 4:
-            self.graph = ext.get_graph_04()
-        elif graph_number == 5:
-            self.graph = ext.get_graph_05()
-        elif graph_number == 6:
-            self.graph = ext.get_graph_06()
-        elif graph_number == 7:
-            # MUSEUM
-            self.graph = ext.get_graph_07()
+        if isinstance(graph_number_or_file, int):
+            if graph_number_or_file == 0:
+                self.graph = ext.get_graph_00()
+            elif graph_number_or_file == 1:
+                # OFFICE
+                self.graph = ext.get_graph_01()
+            elif graph_number_or_file == 2:
+                # GRID 10x10
+                self.graph = ext.get_graph_02()
+            elif graph_number_or_file == 3:
+                # GRID 8x8
+                self.graph = ext.get_graph_03()
+            elif graph_number_or_file == 4:
+                self.graph = ext.get_graph_04()
+            elif graph_number_or_file == 5:
+                self.graph = ext.get_graph_05()
+            elif graph_number_or_file == 6:
+                self.graph = ext.get_graph_06()
+            elif graph_number_or_file == 7:
+                # MUSEUM
+                self.graph = ext.get_graph_07()
+            else:
+                print("No graph with that number")
         else:
-            print("No graph with that number")
+            self.graph = graph_number_or_file
 
     def set_capture_range(self, value: int):
         self.capture_range = value
@@ -187,7 +190,8 @@ class MyInputs:
         self.start_target_random = False
         self.start_target_true = v0
 
-    def set_start_target_list(self, v_list: list):
+    def set_start_target(self, v_list: list):
+        """Target will start at the first vertex of the list"""
         self.start_target_random = False
         self.start_target_v_list = v_list
 
@@ -199,7 +203,7 @@ class MyInputs:
         if who == 's':
             self.set_start_searchers(v_list)
         else:
-            self.set_start_target_list(v_list)
+            self.set_start_target(v_list)
 
     def set_searcher_together(self, op: bool):
         self.searcher_together = op

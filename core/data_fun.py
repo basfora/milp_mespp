@@ -7,32 +7,6 @@ from scipy.stats import sem as sem_sp, t as t_sp
 from classes.belief import MyBelief
 from core import extract_info as ext
 
-"""start.txt : 
-1st line, planning horizon; 2nd line, the discount factor; 3rd line, the number of graph vertices; 
-4th line, the list of robots’ starting vertices; 5th line, the initial belief vector (including b0); 
-6th line, the number of “outer iterations” of the algorithm (typically 1).
-Example:
-10  h
-0.99 gamma
-2 n
-1 2 1 v0
-0.0 0.2 0.8 …… b(0)
-1 (inter)
-
-M.txt: argets’ motion model matrix, including the 1st row / column with zeros as a flattened array. 
-[1 0; 0 M] → bigM as 1 row
-
-C.txt: file containing the capture matrices as flattened arrays. Syntax: searcher_id, vertex_id, capture_matrix
-
-adj.txt: file containing the adjacency list describing the graph. 1 vertex for each line.
-
-
-paths.txt: file containing, for each line, the path computed for each robot (from step 0/starting vertex)
-
-solver_data.txt: file containing the solver results. 1st line time in seconds, 2nd line objective function value. 
-
-"""
-
 
 def data_folder(folder_name='plot_data'):
 
@@ -1067,3 +1041,34 @@ if __name__ == "__main__":
     # check_milp_vs_cpp_sum()
     # check_milp()
     # get_single_file('data_review/DH10S1-5G2FNMV', 11)
+
+
+
+
+"""start.txt : 
+1st line, planning horizon; 2nd line, the discount factor; 3rd line, the number of graph vertices; 
+4th line, the list of robots’ starting vertices; 5th line, the initial belief vector (including b0); 
+6th line, the number of “outer iterations” of the algorithm (typically 1).
+Example:
+10  h
+0.99 gamma
+2 n
+1 2 1 v0
+0.0 0.2 0.8 …… b(0)
+1 (inter)
+
+M.txt: argets’ motion model matrix, including the 1st row / column with zeros as a flattened array. 
+[1 0; 0 M] → bigM as 1 row
+
+C.txt: file containing the capture matrices as flattened arrays. Syntax: searcher_id, vertex_id, capture_matrix
+
+adj.txt: file containing the adjacency list describing the graph. 1 vertex for each line.
+
+
+paths.txt: file containing, for each line, the path computed for each robot (from step 0/starting vertex)
+
+solver_data.txt: file containing the solver results. 1st line time in seconds, 2nd line objective function value. 
+
+"""
+
+

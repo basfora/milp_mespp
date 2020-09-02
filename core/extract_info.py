@@ -796,17 +796,6 @@ def get_node_distance(g, v1: int, v2: int):
     return distance
 
 
-def retrieve_graph(sim_data):
-    # graph file and layout
-    g = sim_data.g
-    if 'grid' in g['name']:
-        my_layout = g.layout("grid")
-    else:
-        my_layout = g.layout("kk")
-
-    return g, my_layout
-
-
 # -----------------------
 # retrieve specific graphs
 # -----------------------
@@ -1077,6 +1066,64 @@ def get_zeta_s(zeta, s):
         return zeta_s
 
 
+# searchers paths
+def xs_to_path_list(x_s: dict):
+    """Convert from
+    x_s(s, v, t) = 1
+    to 
+    path(s) = [v0, v1, v2...vh]
+    """
+
+    # pi(s, t) = v
+    pi = xs_to_path_dict(x_s)
+    # path(s) = [v0, v1...vh]
+    path = path_as_list(pi)
+
+    return path
+
+
+def xs_to_path_dict(x_s: dict):
+    """Get x variables which are one and save it as the planned path path[s_id, time]: v
+    save planned path in searchers
+    Convert from
+    x_s(s, v, t) = 1
+    to
+    pi(s, t) = v"""
+
+    pi = dict()
+
+    for k in x_s.keys():
+        value = x_s.get(k)
+        s, v, t = get_from_tuple_key(k)
+
+        if value == 1:
+            pi[s, t] = v
+
+    return pi
+
+
+def path_as_list(path: dict):
+    """Get sequence of vertices from path[s, t] = v
+    return as list for each searcher s
+    path[s] = [v0, v1, v2...vh]"""
+
+    pi = dict()
+
+    h = get_h_from_tuple(path)
+    m = get_m_from_tuple(path)
+    T = get_set_time_u_0(h)
+    S = get_set_searchers(m)[0]
+
+    # loop through time
+    for s in S:
+        pi[s] = []
+        for t in T:
+            v = path[(s, t)]
+            pi[s].append(v)
+
+    return pi
+    
+
 def this_folder(name_folder, parent_folder='data'):
 
     f_path = get_whole_path(name_folder, parent_folder)
@@ -1088,3 +1135,5 @@ if __name__ == "__main__":
 
     my_path = get_project_path()
     print(my_path)
+
+

@@ -1,3 +1,4 @@
+import core.extract_info
 from core import plan_fun as pln
 from core import construct_model as cm
 from core import create_parameters as cp
@@ -74,7 +75,7 @@ def my_specs():
     specs.set_deadline(deadline)
     specs.set_solver_type(solver_type)
     specs.set_horizon(horizon)
-    specs.set_start_target_list(v0_target)
+    specs.set_start_target(v0_target)
     specs.set_start_searchers(v0_searchers)
     specs.set_target_motion(target_motion)
     specs.set_belief_distribution(belief_distribution)
@@ -94,7 +95,7 @@ def test_inputs():
     specs.set_solver_type(solver_type)
     specs.set_horizon(horizon)
     specs.set_graph(0)
-    specs.set_start_target_list(v0_target)
+    specs.set_start_target(v0_target)
     specs.set_start_searchers(v0_searchers)
     specs.set_target_motion(target_motion)
     specs.set_belief_distribution(belief_distribution)
@@ -232,13 +233,13 @@ def test_run_solver_get_model_data():
     md.optimize()
     x_s1, b_target1 = mf.query_variables(md)
     obj_fun1, time_sol1, gap1, threads1 = mf.get_model_data(md)
-    pi_dict1 = pln.xs_to_path(x_s1)
-    path1 = pln.path_as_list(pi_dict1)
+    pi_dict1 = core.extract_info.xs_to_path_dict(x_s1)
+    path1 = core.extract_info.path_as_list(pi_dict1)
 
     # solve: 2
     obj_fun2, time_sol2, gap2, x_s2, b_target2, threads2 = pln.run_solver(g, horizon, searchers, b_0, M)
-    pi_dict2 = pln.xs_to_path(x_s2)
-    path2 = pln.path_as_list(pi_dict2)
+    pi_dict2 = core.extract_info.xs_to_path_dict(x_s2)
+    path2 = core.extract_info.path_as_list(pi_dict2)
 
     # solve: 3
     specs = my_specs()

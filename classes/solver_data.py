@@ -1,3 +1,5 @@
+from milp_mespp.core import extract_info as ext
+
 
 class MySolverData:
     """Save at each time the MILP solver is called:
@@ -58,6 +60,7 @@ class MySolverData:
 
         self.x_s[t] = x_s
 
+        # b_target[(v, t)] = beta, 0 <= beta <= 1
         self.belief[t] = b_target
 
         # for different horizons (if necessary in the future)
@@ -65,6 +68,7 @@ class MySolverData:
             horizon = self.horizon[0]
         self.horizon[t] = horizon
 
+    # retrieving data
     def unpack(self):
         deadline = self.deadline
         horizon = self.horizon[0]
@@ -73,5 +77,93 @@ class MySolverData:
         gamma = self.gamma
 
         return deadline, horizon, theta, solver_type, gamma
+
+    def retrieve_graph(self):
+        """Return stored graph and printer friendly layout"""
+
+        g = self.g
+
+        if 'grid' in g['name']:
+            my_layout = g.layout("grid")
+        else:
+            my_layout = g.layout("kk")
+
+        return g, my_layout
+
+    def retrieve_solver_belief(self, t_plan=0, t=0):
+        """Retrieve belief and return as list for desired time t
+        :param t_plan : time the solver was called
+        :param t : time you want the computed belief"""
+
+        # get raw info stored from the solver
+        # b_target[(v, t)] = beta, 0 <= beta <= 1
+        b_target = self.belief[t_plan]
+
+        # make it pretty: b = [b_c, b_v1, .... b_vn]
+        belief = self.get_belief_vector(b_target, t)
+
+        return belief
+
+    def retrieve_planned_path(self, t_plan=0, s=None):
+        """Retrieve planned path for searchers:
+        t_plan : planned time
+        if s = None, retrieve for all searchers
+        return path as list
+        path[s] = [v0, ...vh]"""
+
+        x_s = self.x_s[t_plan]
+        path = ext.xs_to_path_list(x_s)
+
+        if s is not None:
+            pi = path[s]
+        else:
+            pi = path
+
+        return pi
+
+    def retrieve_occupied_vertices(self, t_plan=0, t=0):
+        """Retrieve list of occupied vertices at time t by searchers"""
+
+        pi = self.retrieve_planned_path(t_plan)
+
+        pi_t = []
+        for s in pi.keys():
+            v = pi[s][t]
+            pi_t.append(v)
+
+        return pi_t
+
+    @staticmethod
+    def get_belief_vector(b: dict, t: int):
+        """Return belief vector
+        b(t) = [b_c, b_v1, b_v2...b_vn]"""
+
+        my_list = [k[1] for k in b.keys() if k[1] == t]
+
+        # number of vertices + capture
+        nu = len(my_list)
+        # set of capture + vertices V_c = [0, 1, ... n]
+        V_c = ext.get_idx_vertices(nu)[0]
+
+        belief = []
+        for v in V_c:
+            beta = b.get((v, t))
+            belief.append(beta)
+
+        return belief
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

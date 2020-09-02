@@ -249,7 +249,7 @@ def my_specs():
     specs.set_deadline(deadline)
     specs.set_solver_type(solver_type)
     specs.set_horizon(horizon)
-    specs.set_start_target_list(v0_target)
+    specs.set_start_target(v0_target)
     specs.set_start_searchers(v0_searchers)
     specs.set_target_motion(target_motion)
     specs.set_belief_distribution(belief_distribution)

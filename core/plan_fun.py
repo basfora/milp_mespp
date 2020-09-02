@@ -9,9 +9,9 @@ from core import create_parameters as cp
 from gurobipy import *
 
 
-def run_planner(specs=None, printout=True):
+def run_planner(specs=None, output_data=False, printout=True):
     """Initialize the planner the pre-set parameters
-        Return path of searchers as list"""
+        Return path of searchers as list of lists"""
 
     if specs is None:
         specs = cp.default_specs()
@@ -26,13 +26,20 @@ def run_planner(specs=None, printout=True):
 
     obj_fun, time_sol, gap, x_s, b_target, threads = run_solver(g, h, searchers, b0, M)
     searchers, path_dict = update_plan(searchers, x_s)
+    path_list = ext.path_as_list(path_dict)
 
-    path_list = path_as_list(path_dict)
+    if output_data:
+        # save the new data
+        solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_s, b_target, 0)
 
     if printout:
         print_path(x_s)
+        print("Solving time: %.5f" % time_sol)
 
-    return path_list
+    if output_data:
+        return path_list, solver_data
+    else:
+        return path_list
 
 
 def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, solver_type='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
@@ -184,10 +191,7 @@ def init_wrapper(specs, sim=False):
     belief = cp.create_belief(specs)
     target = cp.create_target(specs)
 
-    if sim:
-        print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
-    else:
-        print('Start searcher: %d ' % searchers[1].start)
+    print('Start target: %d, searcher: %d ' % (target.current_pos, searchers[1].start))
 
     return belief, searchers, solver_data, target
 
@@ -245,26 +249,6 @@ def update_temp_path(searchers: dict, temp_pi: dict, my_s: int):
 
 
 # get searchers path after planner
-def xs_to_path(x_s: dict):
-    """Get x variables which are one and save it as the planned path path[s_id, time]: v
-    save planned path in searchers
-    Convert from
-    x_s(s, v, t) = 1
-    to
-    OUTPUT pi(s, t) = v"""
-
-    pi = dict()
-
-    for k in x_s.keys():
-        value = x_s.get(k)
-        s, v, t = ext.get_from_tuple_key(k)
-
-        if value == 1:
-            pi[s, t] = v
-
-    return pi
-
-
 def path_to_xs(path: dict):
     """Convert from
     pi(s, t) = v
@@ -287,31 +271,9 @@ def path_to_xs(path: dict):
     return x_searchers
 
 
-def path_as_list(path: dict):
-    """Get sequence of vertices from path[s, t] = v
-    for searcher s
-    return as list [v0, v1, v2...vh]"""
-
-    pi = dict()
-
-    h = ext.get_h_from_tuple(path)
-    m = ext.get_m_from_tuple(path)
-    T = ext.get_set_time_u_0(h)
-    S = ext.get_set_searchers(m)[0]
-
-    # loop through time
-    for s in S:
-        pi[s] = []
-        for t in T:
-            v = path[(s, t)]
-            pi[s].append(v)
-
-    return pi
-
-
 def print_path(x_s: dict):
-    pi_dict = xs_to_path(x_s)
-    path = path_as_list(pi_dict)
+    pi_dict = ext.xs_to_path_dict(x_s)
+    path = ext.path_as_list(pi_dict)
 
     print('--\nPlanned path: ')
     for s in path.keys():
@@ -326,7 +288,7 @@ def path_of_s(path: dict, s_id):
     INPUT path[s, t] = v
     OUTPUT [v0, ....v]"""
 
-    pi = path_as_list(path)
+    pi = ext.path_as_list(path)
 
     return pi[s_id]
 
@@ -362,7 +324,7 @@ def update_plan(searchers: dict, x_s: dict):
     Store new plan on searchers class"""
 
     # get position of all searchers based on x[s, v, t] variable from solver
-    path = xs_to_path(x_s)
+    path = ext.xs_to_path_dict(x_s)
 
     searchers = store_path(searchers, path)
 

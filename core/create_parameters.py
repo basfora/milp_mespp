@@ -71,7 +71,7 @@ def create_belief(specs):
 
     # save on specs
     v_list = v_list_from_belief(b_0)
-    specs.set_start_target_list(v_list)
+    specs.set_start_target(v_list)
 
     return belief
 
@@ -570,11 +570,12 @@ def create_grid_graph(w: int, h: int):
     n_vertex = w*h
     ref = "G" + str(n_vertex) + 'V' + '_grid'
     graph_opt = 5
-    deadline = None
     g = my_graph(n_vertex, ref, graph_opt, w, h)
     save_graph(g, ref)
     plot_simple_graph(g)
     save_pdf(g, ref)
+
+    return g
 
 
 def add_edge_grid(g, w, h):
