@@ -565,6 +565,44 @@ def my_graph(number_vertex: int, ref: str, graph_opt=1, w=None, h=None):
     return g
 
 
+def create_graph(n: int, edges: list, base_name: str):
+    """Create iGraph based on
+    :param n : number of vertices
+    :param edges : list of connections, python index: [(0, 1), (1,2)...]
+    :param base_name : """
+
+    # create new graph
+    g = Graph(directed=False)
+    g.add_vertices(n)
+
+    # make sure it's indexed right
+    v1 = [e[0] for e in edges]
+    v2 = [e[1] for e in edges]
+    if min(v1) > 0 or min(v2) > 0:
+        edges = [(e[0] - 1, e[1] - 1) for e in edges]
+
+    g.add_edges(edges)
+
+    V = ext.get_set_vertices(g)[0]
+
+    # label starting at 1
+    g.vs["label"] = V
+
+    # find shortest path length between any two vertices
+    short_paths = g.shortest_paths_dijkstra()
+    g["path_len"] = short_paths
+
+    # find neighbors to each vertex
+    for v in V:
+        vidx = ext.get_python_idx(v)
+        nei = g.neighbors(vidx)
+        g.vs[vidx]["neighbors"] = nei
+
+    # name graph
+    g["name"] = base_name
+    return g
+
+
 def create_grid_graph(w: int, h: int):
     """wxh graph"""
     n_vertex = w*h
@@ -662,6 +700,18 @@ def create_museum_graph():
     graph_opt = 7
     g = my_graph(n_vertex, ref, graph_opt)
     save_graph(g, ref)
+    plot_simple_graph(g, 'kk')
+
+    return g
+
+
+def create_school_graph(edges):
+    """School graph based on list of connections"""
+
+    n = 46
+    base_name = 'G' + str(n) + 'V_ss2'
+    g = create_graph(n, edges, base_name)
+    save_graph(g, base_name)
     plot_simple_graph(g, 'kk')
 
     return g

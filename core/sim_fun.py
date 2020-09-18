@@ -53,8 +53,8 @@ def simulator_main(specs, printout=True):
             # check if it's time to re-plan (OBS: it will plan on t = 0)
 
             # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-            obj_fun, time_sol, gap, x_s, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new,
-                                                                                    M, gamma, solver_type, timeout)
+            obj_fun, time_sol, gap, x_s, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new, M,
+                                                                            solver_type, timeout, gamma)
 
             # save the new data
             solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_s, b_target, t)

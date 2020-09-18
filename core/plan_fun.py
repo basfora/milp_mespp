@@ -23,8 +23,11 @@ def run_planner(specs=None, output_data=False, printout=True):
     h = specs.horizon
     b0 = belief.new
     M = target.unpack()
+    gamma = specs.gamma
+    timeout = specs.timeout
+    solver_type = specs.solver_type
 
-    obj_fun, time_sol, gap, x_s, b_target, threads = run_solver(g, h, searchers, b0, M)
+    obj_fun, time_sol, gap, x_s, b_target, threads = run_solver(g, h, searchers, b0, M, solver_type, timeout, gamma)
     searchers, path_dict = update_plan(searchers, x_s)
     path_list = ext.path_as_list(path_dict)
 
@@ -34,7 +37,11 @@ def run_planner(specs=None, output_data=False, printout=True):
 
     if printout:
         print_path(x_s)
-        print("Solving time: %.5f" % time_sol)
+        if isinstance(time_sol, dict):
+            t_sol = time_sol['total']
+        else:
+            t_sol = time_sol
+        print("Solving time: %.5f" % t_sol)
 
     if output_data:
         return path_list, solver_data
@@ -42,7 +49,8 @@ def run_planner(specs=None, output_data=False, printout=True):
         return path_list
 
 
-def run_solver(g, horizon, searchers, b0, M_target, gamma=0.99, solver_type='central', timeout=30 * 60, n_inter=1, pre_solve=-1):
+def run_solver(g, horizon, searchers, b0, M_target, solver_type='central', timeout=30 * 60, gamma=0.99, n_inter=1,
+               pre_solve=-1):
     """Run solver according to type of planning specified"""
 
     if solver_type == 'central':

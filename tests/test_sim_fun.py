@@ -345,8 +345,8 @@ def test_time_consistency():
 
     # FIRST ITERATION
     # call for model solver wrapper according to centralized or decentralized solver and return the solver data
-    obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new, M, gamma,
-                                                                            solver_type)
+    obj_fun, time_sol, gap, x_searchers, b_target, threads = pln.run_solver(g, horizon, searchers, belief.new, M,
+                                                                            solver_type, gamma)
     # save the new data
     solver_data.store_new_data(obj_fun, time_sol, gap, threads, x_searchers, b_target, horizon)
 
@@ -401,7 +401,7 @@ def test_time_consistency():
     # FIRST ITERATION
     # call for model solver wrapper according to centralized or decentralized solver and return the solver data
     obj_fun1, time_sol1, gap1, x_searchers1, b_target1, threads1 = pln.run_solver(g, horizon1, searchers1, belief1.new,
-                                                                                  M1, gamma1, solver_type1)
+                                                                                  M1, solver_type1, gamma1)
 
     assert obj_fun == obj_fun1
     assert round(time_sol, 2) == round(time_sol1, 2)
