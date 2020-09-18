@@ -528,7 +528,18 @@ def get_date_folder(today_run: int):
     return name_folder, whole_path
 
 
+def this_folder(name_folder, parent_folder='data'):
+    """Get path for this folder -- redundant function
+    TODO take it out"""
+    f_path = get_whole_path(name_folder, parent_folder)
+
+    return f_path
+
+
 def get_whole_path(name_folder: str, option='data'):
+    """Get path to project  folder and append:
+    :param option : folder under project folder
+    :param name_folder : folder under option folder"""
 
     # this file directory
     path1 = os.path.dirname(os.path.abspath(__file__))
@@ -571,6 +582,22 @@ def get_project_path(proj_name='milp_mespp'):
     return project_path
 
 
+def get_folder_path(proj_name, folder_name, inter_folder=None):
+    """Return folder path
+    proj_name > folder_name"""
+
+    project_path = get_project_path(proj_name)
+
+    if inter_folder is not None:
+        sub_folder = inter_folder + '/' + folder_name
+    else:
+        sub_folder = folder_name
+
+    folder_path = project_path + '/' + sub_folder
+
+    return folder_path
+
+
 def get_outside_path(name_folder, parent_folder='r_data', module_name='milp_risk'):
     """Get folder path outside milp_mespp"""
 
@@ -582,8 +609,6 @@ def get_outside_path(name_folder, parent_folder='r_data', module_name='milp_risk
 def folder_in_project(folder_name='data', proj_name='milp_mespp'):
     """Check if folder is already in the project folder (milp_messp)
     if not, create it"""
-
-    # TODO how to change the project name to use with milp_mespp_risk ?
 
     # get project path
     proj_path = get_project_path(proj_name)
@@ -1066,7 +1091,7 @@ def get_zeta_s(zeta, s):
         return zeta_s
 
 
-# searchers paths
+# PATHS
 def xs_to_path_list(x_s: dict):
     """Convert from
     x_s(s, v, t) = 1
@@ -1122,15 +1147,36 @@ def path_as_list(path: dict):
             pi[s].append(v)
 
     return pi
-    
-
-def this_folder(name_folder, parent_folder='data'):
-
-    f_path = get_whole_path(name_folder, parent_folder)
-
-    return f_path
 
 
+def edges_index(edges):
+    """Edges are given as (v1,v2)
+    Return the indexes of those vertices (v1-1, v2-1)"""
+
+    edges_idx = [(e[0] - 1, e[1] - 1) for e in edges]
+    return edges_idx
+
+
+def path_conn(path):
+    """Set connections between consecutive vertices in path
+    :param path : list of vertices labels (not index) path = [v1, v2...vh]
+    :return list of edges, vertices indexes conn_idx = [(v1_idx, v2_idx), ...]"""
+
+    n = len(path)
+
+    if n > 1:
+        h = range(n - 1)
+        conn = [(path[i], path[i+1]) for i in h]
+    else:
+        # to facilitate plot that single point
+        conn = [(path[0], path[0])]
+    # get index of those vertices (instead of label)
+    conn_idx = edges_index(conn)
+
+    return conn_idx
+
+
+# -------------------------------------------------------------------------
 if __name__ == "__main__":
 
     my_path = get_project_path()

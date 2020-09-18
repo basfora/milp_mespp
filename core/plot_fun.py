@@ -5,6 +5,8 @@ from igraph import plot
 from matplotlib import pyplot as plt
 from core import extract_info as ext
 from core import milp_fun as mf
+from math import sqrt
+
 
 
 def show_me_results(md, g, name_folder: str, deadline: int):
@@ -430,41 +432,57 @@ def plot_target_belief2(g, folder_path, my_layout, b_target: dict, t: int, true_
     return name_file
 
 
-def plot_plan_results(solver_data, folder_name, target_start=0):
-    """Plot graph with
-    initial searchers position, path planned
-    initial target belief (red), belief evolution (pink)
-    """
+# ---------------------------------------------------------------
+# plot functions for coordination types demo
+# ---------------------------------------------------------------
+def plot_points_between_list(v_points, v_conn, my_color='k', my_marker=None):
+    """Plot points and their connections
+    :param v_points = [(x1, y1), (x2, y2)...]
+    :param v_conn = [(0, 1), (1, 2)...]
+    :param my_color
+    :param my_marker"""
 
-    g, my_layout = solver_data.retrieve_graph()
+    my_handle = None
+    for edge in v_conn:
+        i0 = edge[0]
+        i1 = edge[1]
 
-    # data folder path
-    folder_path = ext.get_whole_path(folder_name)
+        n0 = v_points[i0]
+        n1 = v_points[i1]
 
-    # time info
-    h = solver_data.horizon[0]
-    H_ext = ext.get_set_time_u_0(h)
+        px = [n0[0], n1[0]]
+        py = [n0[1], n1[1]]
 
-    # initial configuration
+        marker_size = 3
 
-    print("Starting plots")
-    t_plan = 0
-    for t in H_ext:
-        # get belief vector at that time
-        b_target = solver_data.retrieve_solver_belief(t_plan, t)
-        # get b_c (belief of capture)
-        b_c = b_target[0]
-        # plot belief
-        tgt_file = plot_target_belief2(g, folder_path, my_layout, b_target, t, target_start)
+        my_handle = plt.plot(px, py, color=my_color, marker=my_marker, markersize=marker_size,
+                             linestyle='solid', linewidth=2)
 
-        # plot searchers
-        # get vertices list of path[t]
-        pi = solver_data.retrieve_occupied_vertices(t_plan, t)
-        s_file = plot_searchers_only(g, folder_path, my_layout, pi, t)
-        # assemble it nicely
-        mount_sim_frame(s_file, tgt_file, folder_path, b_c, t, None, 1)
-    delete_frames(folder_path, 'G')
-    return
+    return my_handle
+
+
+def plot_points(vertices: dict or list, my_color='k', my_marker='o', sizemarker=2):
+    """Plot vertices from
+     (dict) V[v] = (x,y)
+     (list) V = [(x1, y1), (x2, y2)...]"""
+
+    if isinstance(vertices, dict):
+        for k in vertices.keys():
+            if not isinstance(k, int):
+                continue
+            x = [vertices[k][0]]
+            y = [vertices[k][1]]
+            plt.plot(x, y, color=my_color, marker=my_marker, markersize=sizemarker)
+    elif isinstance(vertices, list):
+        for v in vertices:
+            x = v[0]
+            y = v[1]
+            plt.plot(x, y, color=my_color, marker=my_marker, markersize=sizemarker)
+    else:
+        print('Wrong input format, accepts dict or list')
+
+    return None
+
 
 
 def plot_searchers_only(g, folder_path, my_layout, pi: list, t: int):
@@ -479,5 +497,9 @@ def plot_searchers_only(g, folder_path, my_layout, pi: list, t: int):
     return name_file
 
 
+
+
+
+    
 
 

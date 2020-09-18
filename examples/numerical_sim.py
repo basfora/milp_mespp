@@ -1,3 +1,5 @@
+"""Example for numerical simulation (multiple runs and change in configuration)"""
+
 # ---------------------------------------------------------------------------------------------------------------------
 # start of header
 # import relevant modules

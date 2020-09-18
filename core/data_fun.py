@@ -66,10 +66,11 @@ def specific_from_data_folder(folder_names, folder_name='data_review'):
     return subfolders_path, subfolders_name
 
 
-def load_data(folder_path):
+def load_data(folder_path, file_name='/global_save.txt'):
     """unpickle the data file"""
 
-    file_name = '/global_save.txt'
+    if '/' not in file_name:
+        file_name = '/' + file_name
 
     file_path = folder_path + file_name
 

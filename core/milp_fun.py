@@ -59,7 +59,7 @@ def set_solver_parameters(m, gamma, horizon, my_vars, timeout=30 * 60, pre_solve
 
 
 def add_variables(md, g, deadline: int, start, vertices_t, searchers=None):
-    # TODO IMPORTANT change to allow for different zetas!!
+    # TODO IMPORTANT change to allow for different zetas!
 
     """Create the variables for my optimization problem
     :param searchers:
@@ -193,8 +193,7 @@ def add_target_variables(md, g, deadline: int, searchers=None):
     belief evolution, alpha
     capture event, zeta and psi
     """
-    # TODO test this
-    # TODO change this to allow for different zetas
+    # TODO change this to allow for different zetas (and unit-test it)
 
     V = ext.get_set_vertices(g)[0]
 

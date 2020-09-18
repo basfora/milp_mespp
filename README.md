@@ -56,6 +56,7 @@ sudo python3 setup.py install
 
 This will install all the other necessary Python libraries and add the folder to your Python path system variable. From inside the `milp_mespp` folder, run on terminal:
 ```
+chmod +x install_script.sh
 ./install_script.sh
 ``` 
 

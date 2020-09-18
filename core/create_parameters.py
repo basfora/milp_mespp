@@ -626,7 +626,11 @@ def save_pdf(g, ref):
     """Plot my graph and show me where the searchers started"""
 
     g.vs["color"] = "gray"
-    my_layout = g.layout("kk")
+    if 'grid' in ref:
+        my_layout = g.layout("grid")
+    else:
+        my_layout = g.layout("kk")
+
     name_file = ref + ".pdf"
     file_path = ext.get_whole_path(name_file, 'graphs')
 

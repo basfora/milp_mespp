@@ -210,7 +210,6 @@ def get_all_capture_s(searchers: dict, s_id):
 
     # s_info or searchers
     if isinstance(s, dict):
-        # TODO take out s_info once code is clean
         # old form, extract from s_info
         c_matrices = s.get('c_matrix')
     else:
