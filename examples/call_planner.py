@@ -17,15 +17,25 @@ specs = MyInputs()
 specs.set_graph(8)
 # solver parameter: central x distributed
 specs.set_solver_type('distributed')
+# target motion
+specs.set_target_motion('static')
 # searchers' detection: capture range and false negatives
 m = 3
 specs.set_capture_range(0)
 specs.set_size_team(m)
 
-# time stuff: deadline mission (tau), planning horizon (h), re-plan frequency (theta)
-specs.set_all_times(5)
+# time-step stuff: deadline mission (tau), planning horizon (h), re-plan frequency (theta)
+h = 5
+specs.set_all_times(h)
 specs.set_theta(1)
+# solver timeout (in sec)
 specs.set_timeout(10)
 
-my_path = pln.run_planner(specs)
+output_solver_data = True
+my_path, solver_data = pln.run_planner(specs, output_solver_data)
+
+# to retrieve belief computed by the solver
+# we want b(t+1) - next time step
+t_next = 1
+my_belief_vec = solver_data.retrieve_solver_belief(0, t_next)
 
