@@ -13,8 +13,8 @@ from classes.inputs import MyInputs
 # initialize default inputs
 specs = MyInputs()
 
-# load graph, either by number or .g file
-specs.set_graph(1)
+# load graph, either by number (int), iGraph object or .p file name (str)
+specs.set_graph(8)
 # solver parameter: central x distributed
 specs.set_solver_type('distributed')
 # searchers' detection: capture range and false negatives

@@ -86,8 +86,14 @@ class MyInputs:
             elif graph_number_or_file == 7:
                 # MUSEUM
                 self.graph = ext.get_graph_07()
+            elif graph_number_or_file == 8:
+                # MUSEUM
+                self.graph = ext.get_graph_08()
             else:
                 print("No graph with that number")
+        elif isinstance(graph_number_or_file, str):
+            # if name of a file stored in graphs folder
+            self.graph = ext.get_graph(graph_number_or_file)
         else:
             self.graph = graph_number_or_file
 

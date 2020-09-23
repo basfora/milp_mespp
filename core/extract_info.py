@@ -565,7 +565,7 @@ def get_core_path():
 
 
 def get_project_path(proj_name='milp_mespp'):
-
+    # TODO fix this for other project
     project_level = False
     project_path = None
     this_dir = get_core_path()
@@ -933,6 +933,16 @@ def get_graph_07():
     """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
 
     name = 'G70V'
+    graph_file = add_extension(name)
+    g = get_graph(graph_file)
+
+    return g
+
+
+def get_graph_08():
+    """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
+
+    name = 'G46V_ss2'
     graph_file = add_extension(name)
     g = get_graph(graph_file)
 
