@@ -1,4 +1,4 @@
-from core import extract_info as ext
+from milp_mespp.core import extract_info as ext
 import numpy as np
 
 
@@ -78,6 +78,31 @@ class MySearcher:
 
         self.path_planned[current_time] = new_path_planned
         self.init_milp = new_path_planned[0]
+
+    def get_path_planned(self, t=None):
+        """Return the path planned as dict
+        pi(s, t) = v"""
+
+        pi = {}
+
+        if t is None:
+            t = ext.get_last_key(self.path_planned)
+
+        list_v = self.path_planned[t]
+        t_plan = 0
+        for v in list_v:
+
+            pi[(self.id, t_plan)] = v
+            t_plan += 1
+
+        return pi
+
+    def get_last_planned(self):
+        """Return the path planned as list of vertices"""
+
+        t, list_v = ext.get_last_info(self.path_planned)
+
+        return list_v
 
     def define_capture_matrix(self, g):
 

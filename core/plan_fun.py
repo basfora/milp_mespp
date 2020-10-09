@@ -291,6 +291,16 @@ def print_path(x_s: dict):
     return path
 
 
+def print_path_list(path):
+
+    print('--\nPlanned path: ')
+    for s in path.keys():
+        path_s = path[s]
+        print("Searcher %d: %s" % (s, path_s))
+
+    return path
+
+
 def path_of_s(path: dict, s_id):
     """Get sequence of vertices [list] for searcher s_id
     INPUT path[s, t] = v
@@ -355,6 +365,7 @@ def store_path(searchers: dict, path: dict):
 
 
 def searchers_evolve(searchers, new_pos):
+    # TODO insert into team
     """call to evolve searchers position """
 
     for s_id in searchers.keys():

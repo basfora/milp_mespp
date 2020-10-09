@@ -34,6 +34,7 @@ class MySolverData:
         # input parameters (immutable)
         self.g = None
         self.g = my_graph
+        self.V, self.n = ext.get_set_vertices(my_graph)
 
         self.theta = theta
         self.deadline = deadline
@@ -77,6 +78,24 @@ class MySolverData:
         gamma = self.gamma
 
         return deadline, horizon, theta, solver_type, gamma
+
+    def unpack_for_planner(self):
+
+        horizon = self.horizon[0]
+        solver_type = self.solver_type
+        gamma = self.gamma
+        timeout = self.timeout
+        g = self.g
+
+        return g, horizon, solver_type, timeout, gamma
+
+    def unpack_for_sim(self):
+
+        deadline = self.deadline
+        theta = self.theta
+        n = self.n
+
+        return deadline, theta, n
 
     def retrieve_graph(self):
         """Return stored graph and printer friendly layout"""

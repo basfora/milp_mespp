@@ -940,7 +940,7 @@ def get_graph_07():
 
 
 def get_graph_08():
-    """Load Hollinger, 2009 middle graph from Fig 2 MUSEUM"""
+    """Load school graph"""
 
     name = 'G46V_ss2'
     graph_file = add_extension(name)
@@ -1126,6 +1126,10 @@ def xs_to_path_dict(x_s: dict):
     pi(s, t) = v"""
 
     pi = dict()
+
+    if x_s is None:
+        print('No solution found!')
+        exit()
 
     for k in x_s.keys():
         value = x_s.get(k)

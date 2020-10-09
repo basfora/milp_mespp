@@ -1,6 +1,6 @@
 import datetime
 from core import extract_info as ext
-
+import random
 
 class MyInputs:
 
@@ -39,6 +39,7 @@ class MyInputs:
         # belief: initial belief
         self.b0 = None
         self.v_taken = None
+        self.start_idx = 0
 
         # searcher initial position
         self.start_searcher_random = True
@@ -87,7 +88,7 @@ class MyInputs:
                 # MUSEUM
                 self.graph = ext.get_graph_07()
             elif graph_number_or_file == 8:
-                # MUSEUM
+                # school
                 self.graph = ext.get_graph_08()
             else:
                 print("No graph with that number")
@@ -100,7 +101,7 @@ class MyInputs:
     def set_capture_range(self, value: int):
         self.capture_range = value
 
-    def set_zeta(self, value: float):
+    def set_zeta(self, value: float or None):
         self.zeta = value
 
     def set_list_m(self, my_list: list):
@@ -202,7 +203,14 @@ class MyInputs:
         self.start_target_v_list = v_list
 
         self.qty_possible_nodes = len(v_list)
-        self.start_target_true = v_list[0]
+        idx = self.start_idx
+        if idx is None:
+            self.start_target_true = random.choice(v_list)
+        else:
+            self.start_target_true = v_list[idx]
+
+    def set_start_target_vertex(self, idx=0):
+        self.start_idx = idx
 
     def set_v_taken(self, v_list: list, who: str):
         self.v_taken = v_list

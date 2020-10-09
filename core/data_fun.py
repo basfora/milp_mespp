@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import scipy
 from scipy.stats import sem as sem_sp, t as t_sp
-from classes.belief import MyBelief
+from milp_mespp.classes.belief import MyBelief
 from core import extract_info as ext
 
 

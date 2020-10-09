@@ -1,11 +1,11 @@
 """Create parameters for the problem instance"""
 
-from core import extract_info as ext
-from classes.searcher import MySearcher
-from classes.belief import MyBelief
-from classes.target import MyTarget
-from classes.solver_data import MySolverData
-from classes.inputs import MyInputs
+from milp_mespp.core import extract_info as ext
+from milp_mespp.classes.searcher import MySearcher
+from milp_mespp.classes.belief import MyBelief
+from milp_mespp.classes.target import MyTarget
+from milp_mespp.classes.solver_data import MySolverData
+from milp_mespp.classes.inputs import MyInputs
 
 # external packages
 from igraph import *
@@ -160,13 +160,10 @@ def draw_v_random(g_or_n, q=1, my_seed=None):
     return v_target, v_left
 
 
-def pick_pseudo_random(my_list: list, my_seed: int, qty: int, replace_opt=None):
+def pick_pseudo_random(my_list: list, my_seed: int, qty: int, replace_opt=False):
 
     # set seed
     np.random.seed(my_seed)
-
-    if replace_opt is None:
-        replace_opt = False
 
     # idx_list = np.random.randint(low=0, high=last_idx, size=qty)
     random_list = np.random.choice(my_list, qty, replace=replace_opt).tolist()
@@ -285,6 +282,8 @@ def set_motion_matrix(g, motion_rule='random'):
             M[v, delta_prime] = prob_v
     elif motion_rule == 'static':
             M = np.identity(n)
+    else:
+        exit(print('No other option at this moment'))
 
     my_M = M.tolist()
     return my_M

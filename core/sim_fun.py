@@ -135,10 +135,11 @@ def print_positions(searchers, target):
 
 def print_capture_details(t, target, searchers, solver_data):
     """Print capture details on terminal"""
+    print('Mission succeed, target was captured.')
     print("\nCapture details: \ntime = " + str(t), "\nvertex = " + str(target.capture_v),
           "\nsearcher = " + str(ext.find_captor(searchers)))
 
-    print("Solving time: ", solver_data.solve_time)
+    # print("Solving time: ", solver_data.solve_time)
     return
 
 
