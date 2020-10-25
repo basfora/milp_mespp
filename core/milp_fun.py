@@ -56,6 +56,7 @@ def set_solver_parameters(m, gamma, horizon, my_vars, timeout=30 * 60, pre_solve
     m.setParam('TimeLimit', timeout)
     m.setParam('Threads', 8)
     m.setParam('Presolve', pre_solve)
+    m.setParam('OutputFlag', 0)
 
 
 def add_variables(md, g, deadline: int, start, vertices_t, searchers=None):
@@ -276,7 +277,6 @@ def add_searcher_constraints(md, g, my_vars: dict, start: list, vertices_t: dict
             # each searcher can only be at one place at each time (including the start vertex), Eq. (1, 7)
             if t == 0:
                 md.addConstr(X[s, v_t[0], 0] == 1)
-            # md.addConstr(quicksum(X[s, v, t] for v in v_t) == 1)
 
             for u in v_t:
                 my_next_v = cm.get_next_vertices(g, s, u, t, vertices_t, Tau_ext)
@@ -289,8 +289,6 @@ def add_searcher_constraints(md, g, my_vars: dict, start: list, vertices_t: dict
                     if my_previous_v is not None:
                         # (Eq. 8) searcher can only move to v from j in delta_prime(v) AND V^tau(t-1)
                         md.addConstr(quicksum(Y[s, i, u, t - 1] for i in my_previous_v) == X[s, u, t])
-                        # md.addConstr(quicksum(Y[s, i, u, t - 1] for i in my_previous_v) ==
-                                     # quicksum(Y[s, u, i, t] for i in my_next_v))
 
 
 def add_capture_constraints(md, g, my_vars: dict, searchers: dict, vertices_t, b0: list, M: list, deadline: int):

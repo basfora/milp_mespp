@@ -32,7 +32,7 @@ def call_planner_ex():
     specs.set_all_times(h)
     specs.set_theta(1)
     # solver timeout (in sec)
-    specs.set_timeout(10)
+    specs.set_timeout(100)
 
     # belief
     n = len(specs.graph.vs)
@@ -42,7 +42,7 @@ def call_planner_ex():
         b_0[v] = 1 / 6
     specs.set_b0(b_0)
     # searchers initial vertices
-    specs.set_start_searchers([3, 3, 3])
+    specs.set_start_searchers([2, 2, 2])
 
     output_solver_data = True
     my_path, solver_data = pln.run_planner(specs, output_solver_data)
@@ -95,6 +95,4 @@ def call_sim_ex():
     belief, target, searchers, sim_data = sf.run_simulator(specs)
 
 
-
-
-call_sim_ex()
+call_planner_ex()
