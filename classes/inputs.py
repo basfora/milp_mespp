@@ -203,6 +203,14 @@ class MyInputs:
         self.start_target_v_list = v_list
 
         self.qty_possible_nodes = len(v_list)
+
+        if self.qty_possible_nodes < 1:
+            exit(print('List of possible nodes is empty. Exiting simulation.'))
+
+        # empty list
+        if self.qty_possible_nodes < 1:
+            exit(print('Belief vector is empty.'))
+
         idx = self.start_idx
         if idx is None:
             self.start_target_true = random.choice(v_list)
