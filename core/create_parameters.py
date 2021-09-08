@@ -1,11 +1,11 @@
 """Create parameters for the problem instance"""
 
-from milp_mespp.core import extract_info as ext
-from milp_mespp.classes.searcher import MySearcher
-from milp_mespp.classes.belief import MyBelief
-from milp_mespp.classes.target import MyTarget
-from milp_mespp.classes.solver_data import MySolverData
-from milp_mespp.classes.inputs import MyInputs
+from core import extract_info as ext
+from classes.searcher import MySearcher
+from classes.belief import MyBelief
+from classes.target import MyTarget
+from classes.solver_data import MySolverData
+from classes.inputs import MyInputs
 
 # external packages
 from igraph import *
@@ -238,7 +238,7 @@ def set_initial_belief(g_or_n, v_list: list, type_distribution='uniform'):
     # if the initial_prob is not a list with pre-determined initial probabilities
     # for each possible initial vertex
     # just consider equal probability between possible vertices
-    if type_distribution is 'uniform':
+    if type_distribution == 'uniform':
         prob_init = 1/q
     else:
         prob_init = type_distribution
@@ -274,7 +274,7 @@ def set_motion_matrix(g, motion_rule='random'):
 
     M = np.zeros((n, n))
 
-    if motion_rule is 'random':
+    if motion_rule == 'random':
         for v in V_:
             delta_prime = [v] + g.vs[v]["neighbors"]
             n_nei = len(delta_prime)

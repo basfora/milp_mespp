@@ -107,6 +107,16 @@ If you try to run the `install_script.sh` and get the error `bash: ./install_scr
 ### Manual install
 If you don't want to use the `install_script` or run into errors, you can install things manually.
 
+#### Installing packaging tools
+On terminal
+
+```
+sudo apt-get install python3-distutils
+sudo apt-get install python3-apt
+sudo apt install python3-pip
+```
+
+
 #### Installing commonly used libraries
 On terminal:
 ```
@@ -114,7 +124,7 @@ python3 -m pip install -U matplotlib
 python3 -m pip install -U numpy
 python3 -m pip install -U pytest
 sudo apt-get install build-essential
-sudo apt-get install python3.6-dev
+sudo apt-get install python3.8-dev
 ```
 
 #### Installing igraph

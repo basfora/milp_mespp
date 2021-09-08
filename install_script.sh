@@ -1,10 +1,13 @@
 #!/bin/bash -i
 # install python libraries
+sudo apt-get install python3-distutils
+sudo apt-get install python3-apt
+sudo apt install python3-pip
 python3 -m pip install -U matplotlib
 python3 -m pip install -U numpy
 python3 -m pip install -U pytest
 sudo apt-get install build-essential
-sudo apt-get install python3.6-dev
+sudo apt-get install python3.8-dev
 sudo apt-get install ffmpeg
 
 # install igraph

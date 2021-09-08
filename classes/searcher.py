@@ -1,4 +1,4 @@
-from milp_mespp.core import extract_info as ext
+from core import extract_info as ext
 import numpy as np
 
 
