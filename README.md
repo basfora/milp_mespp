@@ -31,7 +31,7 @@ Supports multiple searchers, arbitrary capture ranges, and false negatives simul
 
 ## Installation Guide
 
-This project was developed in Python 3.6. It uses the following Python libraries: datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy.
+This project was developed in Python 3.6 and updated to Python 3.8. It uses the following Python libraries: datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy.
 
 Start by cloning this repository, 
 ```
