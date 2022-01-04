@@ -1,4 +1,9 @@
 # milp_mespp
+
+[Overview](#overview) | [Code Structure](#code-structure)
+| [Installation](#installation-guide) | [Examples](#examples) 
+| [Troubleshooting](#troubleshooting) | [Citing this work](#citing-this-work)
+
 ## Overview
 MILP models for the Multi-robot Efficient Search Path Planning (MESPP) problem: team of robots is deployed in a graph-represented environment to capture a moving target within a given deadline. 
 Supports multiple searchers, arbitrary capture ranges, and false negatives simultaneously.
@@ -161,6 +166,21 @@ python3 sim_fun.py
 
 You should see the same output as with the install script (see above).
 
+## Citing this work
+
+If you use this algorithm or code, please cite our [paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9170782):
+
+```
+@article{asfora2020,
+  author={Asfora, Beatriz A. and Banfi, Jacopo and Campbell, Mark},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={Mixed-Integer Linear Programming Models for Multi-Robot Non-Adversarial Search}, 
+  year={2020},
+  volume={5},
+  number={4},
+  pages={6805-6812},
+  doi={10.1109/LRA.2020.3017473}}
+```
 
 ## Author
 Beatriz Asfora
