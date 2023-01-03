@@ -54,7 +54,7 @@ Thank you!
 
 ## Installation Guide
 
-This project was developed in Python 3.6 and updated to Python 3.8. It uses the following Python libraries: datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy.
+This project was developed in Python 3.6 and updated to Python 3.8. It uses the following Python libraries: `datetime, sys, os, pickle, numpy, matplotlib, igraph, gurobipy`.
 
 Start by cloning this repository, 
 ```
@@ -84,7 +84,8 @@ chmod +x install_script.sh
 ``` 
 
 Press ENTER and enter your user password when prompted.
-> This script assumes Ubunty 18.04. For other OS the project code should work, but you will need to install the libraries/set path manually. 
+> This script assumes Ubunty 18.04. Last tested version: Ubuntu 22.04, Gurobi 10.00
+> For other OS the project code should work, but you will need to install the libraries/set path manually. 
 
 When the installation is done, you should see this on your terminal (actual vertex numbers may vary):
 
@@ -94,10 +95,26 @@ Planned path:
 Searcher 1: [27, 54, 53, 58, 44, 45, 46, 47, 47, 47, 48]
 t = 0
 Target vertex: 13
+Searcher 1: vertex 27 
+
+--
+Time step 1 
+--
+t = 1
+Target vertex: 13
 Searcher 1: vertex 54 
 ```
 . . .
 ```
+--
+Time step 9 
+--
+t = 9
+Target vertex: 44
+Searcher 1: vertex 47 
+
+--
+Time step 10
 --
 t = 10
 Target vertex: 49
